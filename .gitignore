@@ -1,0 +1,8 @@
+.vs
+.vscode/*
+!.vscode/settings.json
+build
+out
+dist
+temp
+ext/vcpkg
