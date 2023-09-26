@@ -12,12 +12,46 @@ namespace Petr_Math {
 		}
 	}
 
-	explicit Matrix::Matrix(int const h, int const w) : width(w), height(h), data(new float[w*h]){}
+	Matrix::Matrix(int const h, int const w) : width(w), height(h), data(new float[w*h]){}
 
-	float Matrix::at(int const h, int const w)
+	Matrix::~Matrix()
+	{
+		delete data;
+	}
+
+	Matrix::Matrix(Matrix const& mat) : width(mat.width), height(mat.height), data(new float[width * height])
+	{
+		for (int i = 0; i < height * width; ++i)
+		{
+			data[i] = mat.data[i];
+		}
+	}
+
+	Matrix::Matrix(int w, int h, float num) : width(w), height(h), data(new float[w * h])
+	{
+		for (int i = 0; i < height * width; ++i)
+		{
+			data[i] = num;
+		}
+	}
+
+	Matrix::Matrix(int w, int h, float* nums) : width(w), height(h), data(new float[w * h])
+	{
+		for (int i = 0; i < height * width; ++i)
+		{
+			data[i] = nums[i];
+		}
+	}
+
+	float Matrix::at(int const h, int const w) const
 	{
 		return data[w + h * width];
 	};
+
+	float& Matrix::at(int const w, int const h)
+	{
+		return data[w + h * width];
+	}
 
 	Matrix Matrix::operator*(Matrix const& mat)
 	{
@@ -46,6 +80,7 @@ namespace Petr_Math {
 				result.data[j * height + i] = this->at(i, j);
 			}
 		}
+		return result;
 	}
 
 	Matrix Matrix::operator*(Vector const& vec)
@@ -61,4 +96,10 @@ namespace Petr_Math {
 		}
 		return result;
 	}
+
+	Petr_Math::Matrix::__access_helper__ Matrix::operator[](int row_index) const
+	{
+		return __access_helper__{ data + row_index * width };
+	}
+
 }

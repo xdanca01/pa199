@@ -4,9 +4,4 @@
 
 namespace Petr_Math {
 
-    int some_my_library_function(int x)
-    {
-        return 2*x;
-    }
-
 }
