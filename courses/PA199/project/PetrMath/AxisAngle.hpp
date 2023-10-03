@@ -1,5 +1,7 @@
 // This is a tutorial file. Feel free to remove it.
 #include <cmath>
+#include "Vector.hpp"
+#include "Quaternion.hpp"
 
 #pragma once
 

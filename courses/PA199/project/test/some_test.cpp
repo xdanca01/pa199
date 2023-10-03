@@ -61,6 +61,6 @@ TEST(some_test_suite, Matrix)
     EXPECT_EQ(Result[0][0], 8.f) << "1*2 + 1*2 + 1*2 + 1*2 == 8";
 
     //Transpose
-    Petr_Math::Matrix Result = Result.transpose();
+    Petr_Math::Matrix Result2 = Result.transpose();
     //Multiplication by a vector.
 }

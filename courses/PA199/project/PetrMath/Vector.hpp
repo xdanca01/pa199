@@ -23,6 +23,7 @@ namespace Petr_Math {
 		Vector operator+(Vector const& u);
 		Vector operator-(Vector const& u);
 		Vector operator*(Vector const& u);
+		Vector operator/(float num);
 		float dot(Vector const& vec);
 		Vector cross(Vector const& vec);
 	};

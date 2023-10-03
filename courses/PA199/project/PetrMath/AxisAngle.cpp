@@ -15,8 +15,10 @@ namespace Petr_Math {
 		AxisAngle::~AxisAngle()
 		{
 		}
+		//TODO IDK jestli to funguje takto
 		Quaternion AxisAngle::ToQuaternion()
 		{
-			return Quaternion();
+			Quaternion quat(cos(angle), axis * sin(angle));
+			return quat;
 		}
 }

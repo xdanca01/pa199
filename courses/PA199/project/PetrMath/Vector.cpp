@@ -76,6 +76,15 @@ namespace Petr_Math {
 			}
 			return result;
 		}
+		Vector Vector::operator/(float num)
+		{
+			Vector result(size);
+			for (int i = 0; i < size; ++i)
+			{
+				result[i] = data[i]/num;
+			}
+			return result;
+		}
 		float Vector::dot(Vector const& vec)
 		{
 			float result = 0;
