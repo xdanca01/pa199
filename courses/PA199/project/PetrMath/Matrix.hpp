@@ -25,6 +25,8 @@ namespace Petr_Math {
 		Matrix(Matrix const& mat);
 		Matrix(int w, int h, float num);
 		Matrix(int w, int h, float* nums);
+		//w*h identity matrix
+		Matrix(int wh, float num, bool identity);
 		Vector& operator=(Vector const& vec);
 		float at(int const w, int const h) const;
 		float& at(int const w, int const h);

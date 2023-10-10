@@ -11,6 +11,7 @@ namespace Petr_Math {
 		float s;
 		Vector u;
 		Quaternion(float scalar, Vector v);
+		Quaternion(AxisAngle& axisAngle);
 		Quaternion Conjugation();
 		float Length();
 		Quaternion Inverse();
@@ -18,7 +19,7 @@ namespace Petr_Math {
 		Quaternion operator*(float num);
 		float dot(Quaternion p);
 		Quaternion slerp(Quaternion q2, float t);
-		AxisAngle ToAxisAngle();
 		Quaternion operator*(Quaternion q2);
+		AxisAngle ToAxisAngle();
 	};
 }

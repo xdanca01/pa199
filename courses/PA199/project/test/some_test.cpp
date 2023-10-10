@@ -3,6 +3,8 @@
 #include "../some_my_library_dir/some_library_file.hpp"
 #include "../PetrMath/Vector.cpp"
 #include "../PetrMath/Matrix.cpp"
+#include "../PetrMath/AxisAngle.cpp"
+#include "../PetrMath/Quaternion.cpp"
 #include <gtest/gtest.h>
 
 TEST(some_test_suite, some_test)
@@ -63,4 +65,13 @@ TEST(some_test_suite, Matrix)
     //Transpose
     Petr_Math::Matrix Result2 = Result.transpose();
     //Multiplication by a vector.
+}
+
+TEST(some_test_suite, AxisAngle)
+{
+    Petr_Math::AxisAngle Angle(1.0f, Petr_Math::Vector(3, 1.0f));
+    Petr_Math::Quaternion Quat(Angle);
+    //Quat = Quat.Normalize();
+    /*EXPECT_EQ(Quat.s, 0.877582550) << "scalar == 0.877582550";
+    EXPECT_EQ(Quat.u.data[0], 0.2767965) << "scalar == 1";*/
 }

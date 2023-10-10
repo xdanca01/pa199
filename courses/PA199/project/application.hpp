@@ -8,6 +8,7 @@
 #pragma once
 #include "iapplication.h"
 #include "glad/glad.h"
+#include "Camera.hpp"
 
 class Application : public IApplication {
     // ----------------------------------------------------------------------------
@@ -20,15 +21,22 @@ class Application : public IApplication {
     GLuint vertex_shader;
     GLuint fragment_shader;
     GLuint shader_program;
+    GLuint vertex_shader_line;
+    GLuint fragment_shader_line;
+    GLuint shader_program_line;
     GLuint vertex_arrays;
     GLuint vertex_buffer;
     GLuint index_buffer;
     GLuint texture;
+    GLuint Camerabuffer;
+    GLuint VBO;
+    GLuint VAO;
 
     // ----------------------------------------------------------------------------
     // Constructors & Destructors
     // ----------------------------------------------------------------------------
   public:
+    Camera camera;
     Application(int initial_width, int initial_height, std::vector<std::string> arguments = {});
 
     /** Destroys the {@link Application} and releases the allocated resources. */
@@ -37,6 +45,9 @@ class Application : public IApplication {
     // ----------------------------------------------------------------------------
     // Methods
     // ----------------------------------------------------------------------------
+
+    void prepare_camera();
+    Petr_Math::Matrix perspective(double fov, double aspect, double near, double far);
 
     /** @copydoc IApplication::update */
     void update(float delta) override;
@@ -58,4 +69,6 @@ class Application : public IApplication {
 
     /** @copydoc IApplication::on_key_pressed */
     void on_key_pressed(int key, int scancode, int action, int mods) override;
+
+    void drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_Math::Vector color);
 };

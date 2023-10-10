@@ -1,5 +1,7 @@
 ﻿// This is a tutorial file. Feel free to remove it.
 
+#pragma once
+
 #include "Matrix.hpp"
 
 namespace Petr_Math {
@@ -32,6 +34,24 @@ namespace Petr_Math {
 		for (int i = 0; i < height * width; ++i)
 		{
 			data[i] = num;
+		}
+	}
+
+	Matrix::Matrix(int wh, float num, bool identity) : width(wh), height(wh), data(new float[wh * wh])
+	{
+		for (int i = 0; i < wh; ++i)
+		{
+			for (int j = 0; j < wh; ++j)
+			{
+				if (i == j)
+				{
+					data[i * wh + j] = 1.0f;
+				}
+				else
+				{
+					data[i * wh + j] = 0.0f;
+				}
+			}
 		}
 	}
 

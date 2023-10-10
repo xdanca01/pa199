@@ -18,7 +18,8 @@ target_sources(PA199_project
     PUBLIC 
             "some_game_file.cpp" # This includes the tutorial file. Can be removed.
             "PetrMath"
-)
+            "Camera.hpp"
+            "Camera.cpp")
 
 # Add sub-directories of your libraries
 add_subdirectory("some_my_library_dir")  # This includes the tutorial library. Can be removed.

@@ -1,7 +1,7 @@
 // This is a tutorial file. Feel free to remove it.
 #include <cmath>
 #include "Vector.hpp"
-#include "Quaternion.hpp"
+//#include "Quaternion.hpp"
 
 #pragma once
 
@@ -11,9 +11,12 @@ namespace Petr_Math {
 	public:
 		float angle;
 		Vector axis;
-		void copy(AxisAngle const& axisA);
-		AxisAngle(float a, Vector v);
-		~AxisAngle();
-		Quaternion ToQuaternion();
+		AxisAngle(float a, Vector& v) : axis(v), angle(a) {};
+		void copy(AxisAngle const& axisA)
+		{
+			axis = axisA.axis;
+			angle = axisA.angle;
+		}
+		~AxisAngle() {};
 	};
 }

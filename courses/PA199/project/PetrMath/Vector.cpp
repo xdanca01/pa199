@@ -1,5 +1,7 @@
 // This is a tutorial file. Feel free to remove it.
 
+#pragma once
+
 #include "Vector.hpp"
 
 namespace Petr_Math {
@@ -14,6 +16,12 @@ namespace Petr_Math {
 			delete[] data;
 		}
 		Vector::Vector(Vector const& vec) : size(vec.size), data(new float[vec.size]) { copy(vec); }
+		Vector::Vector(float x, float y, float z) : size(3), data(new float[3])
+		{
+			data[0] = x;
+			data[1] = y;
+			data[2] = z;
+		}
 		Vector::Vector(float x, float y, float z, float w) : size(4), data(new float[4])
 		{
 			data[0] = x;
@@ -76,6 +84,15 @@ namespace Petr_Math {
 			}
 			return result;
 		}
+		Vector Vector::operator*(float num)
+		{
+			Vector result(size);
+			for (int i = 0; i < size; ++i)
+			{
+				result[i] = data[i] * num;
+			}
+			return result;
+		}
 		Vector Vector::operator/(float num)
 		{
 			Vector result(size);
@@ -101,6 +118,16 @@ namespace Petr_Math {
 			result[1] = -(data[0] * vec[2] - data[2] * vec[0]);
 			result[2] = data[0] * vec[1] - data[1] * vec[0];
 			result[3] = data[3];
+			return result;
+		}
+		Vector Vector::normalize()
+		{
+			Vector result(size);
+			float length = magnitude();
+			for (int i = 0; i < size; ++i)
+			{
+				result.data[i] = data[i] / length;
+			}
 			return result;
 		}
 }

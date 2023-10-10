@@ -13,6 +13,7 @@ namespace Petr_Math {
 		Vector(int s);
 		~Vector();
 		Vector(Vector const& vec);
+		Vector(float x, float y, float z);
 		Vector(float x, float y, float z, float w);
 		Vector(int s, float num);
 		Vector& operator=(Vector const& vec);
@@ -23,8 +24,10 @@ namespace Petr_Math {
 		Vector operator+(Vector const& u);
 		Vector operator-(Vector const& u);
 		Vector operator*(Vector const& u);
+		Vector operator*(float num);
 		Vector operator/(float num);
 		float dot(Vector const& vec);
 		Vector cross(Vector const& vec);
+		Vector normalize();
 	};
 }
