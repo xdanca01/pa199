@@ -23,6 +23,8 @@ namespace Petr_Math {
 		explicit Matrix(int w, int h);
 		~Matrix();
 		Matrix(Matrix const& mat);
+		/*Matrix(Matrix&& mat);*/
+		Matrix& operator =(Matrix const& mat);
 		Matrix(int w, int h, float num);
 		Matrix(int w, int h, float* nums);
 		//w*h identity matrix

@@ -55,6 +55,17 @@ namespace Petr_Math {
 		}
 	}
 
+	Matrix& Matrix::operator =(Matrix const& mat)
+	{
+		width = mat.width;
+		height = mat.height;
+		data = new float[width * height];
+		for (int i = 0; i < height * width; ++i)
+		{
+			data[i] = mat.data[i];
+		}
+		return *this;
+	}
 	Matrix::Matrix(int w, int h, float* nums) : width(w), height(h), data(new float[w * h])
 	{
 		for (int i = 0; i < height * width; ++i)

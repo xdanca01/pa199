@@ -208,9 +208,11 @@ Petr_Math::Matrix Application::perspective(double fov, double aspect, double nea
 
 void Application::prepare_camera()
 {
-    camera.eye_position = Petr_Math::Vector(0.0f, 2.0f, 3.0f);
+    camera.eye_position = Petr_Math::Vector(0.0f, 0.0f, 1.0f);
     //camera.set_eye_position(-0.785398163f, 0.34906585f, 50.0f);
     camera.projection_matrix = perspective(45, width / height, 0.1f, 100.0f);
+    //Petr_Math::Vector one(1.0f, 0.0f, 0.0f, 0.0f);
+    //auto res = camera.projection_matrix * one;
 }
 
 void Application::update(float delta) {}
