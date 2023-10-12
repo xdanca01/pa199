@@ -18,10 +18,10 @@ namespace Petr_Math {
 
 	Matrix::~Matrix()
 	{
-		delete data;
+		delete[] data;
 	}
 
-	Matrix::Matrix(Matrix const& mat) : width(mat.width), height(mat.height), data(new float[width * height])
+	Matrix::Matrix(Matrix const& mat) : width(mat.width), height(mat.height), data(new float[mat.width * mat.height])
 	{
 		for (int i = 0; i < height * width; ++i)
 		{

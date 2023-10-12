@@ -193,15 +193,16 @@ Application::~Application()
 Petr_Math::Matrix Application::perspective(double fov, double aspect, double near, double far)
 {
     float D2R = M_PI / 180.0f;
-    float yScale = 1.0f / tan(D2R * fov / 2);
-    float xScale = yScale / aspect;
+    fov = D2R * fov;
+    float yScale = 1.0f / tan(fov / 2);
+    float xScale = yScale * aspect;
     float dist = far - near;
     float dataForMat[16] =
     {
         xScale, 0.0f, 0.0f, 0.0f,
         0.0f, yScale, 0.0f, 0.0f,
-        0.0f, 0.0f, -(far + near) / dist, -1.0f,
-        0.0f, 0.0f, -2.0f * far * near / dist, 0.0f
+        0.0f, 0.0f, -far/dist, -1.0f,
+        0.0f, 0.0f, -(far * near) / dist, 0.0f
     };
     return Petr_Math::Matrix(4, 4, dataForMat);
 }
@@ -209,9 +210,9 @@ Petr_Math::Matrix Application::perspective(double fov, double aspect, double nea
 void Application::prepare_camera()
 {
     camera.eye_position = Petr_Math::Vector(0.0f, 0.0f, 1.0f);
+    camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 1.0f, 0.0f));
     //camera.set_eye_position(-0.785398163f, 0.34906585f, 50.0f);
-    camera.projection_matrix = perspective(45, width / height, 0.1f, 100.0f);
-    //Petr_Math::Vector one(1.0f, 0.0f, 0.0f, 0.0f);
+    camera.projection_matrix = perspective(90.0f, width / height, 0.1f, 100.0f);
     //auto res = camera.projection_matrix * one;
 }
 
@@ -257,15 +258,17 @@ void Application::render() {
     assert(glGetError() == 0U);
 
     */
+    Petr_Math::Vector start2(0.0f, 0.0f, 5.0f, 1.0f);
+    auto tmp = camera.projection_matrix * start2;
     Petr_Math::Vector start(0.0f, 0.0f, 0.0f);
     Petr_Math::Vector endX(1.0f, 0.0f, 0.0f);
     Petr_Math::Vector endY(0.0f, 1.0f, 0.0f);
     Petr_Math::Vector endZ(0.0f, 0.0f, 1.0f);
-
     drawLine(start, endX, endX);
     drawLine(start, endY, endY);
     drawLine(start, endZ, endZ);
-    
+    Petr_Math::Vector endZ2(100.0f, 0.0f, -100.0f);
+    //drawLine(start, endZ2, endZ);
 
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     assert(glGetError() == 0U);
