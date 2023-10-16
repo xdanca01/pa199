@@ -2,10 +2,13 @@
 
 #pragma once
 #include "Vector.hpp"
+#include <vector>
 
 namespace Petr_Math {
 
 	class Matrix {
+	private:
+		std::vector<float> data;
 	public:
 		struct __access_helper__ {
 			explicit __access_helper__(float* row_):row{ row_ } {}
@@ -16,7 +19,6 @@ namespace Petr_Math {
 		private:
 			float* row;
 		};
-		float* data;
 		int width;
 		int height;
 		void copy(Matrix const& mat);
@@ -37,5 +39,6 @@ namespace Petr_Math {
 		Matrix operator*(Vector const& vec);
 		//[row][column]
 		__access_helper__ operator[](int row_index) const;
+		float* getData();
 	};
 }

@@ -10,27 +10,36 @@ namespace Petr_Math {
 			for (int i = 0; i < size; ++i)
 				data[i] = vec.data[i];
 		};
-		Vector::Vector(int s) : size(s), data(new float[s]) {};
+		Vector::Vector(int s) : size(s)
+		{
+			data.resize(s);
+		};
 		Vector::~Vector()
 		{
-			delete[] data;
 		}
-		Vector::Vector(Vector const& vec) : size(vec.size), data(new float[vec.size]) { copy(vec); }
-		Vector::Vector(float x, float y, float z) : size(3), data(new float[3])
+		Vector::Vector(Vector const& vec) : size(vec.size)
 		{
+			data.resize(vec.size);
+			copy(vec);
+		}
+		Vector::Vector(float x, float y, float z) : size(3)
+		{
+			data.resize(3);
 			data[0] = x;
 			data[1] = y;
 			data[2] = z;
 		}
-		Vector::Vector(float x, float y, float z, float w) : size(4), data(new float[4])
+		Vector::Vector(float x, float y, float z, float w) : size(4)
 		{
+			data.resize(4);
 			data[0] = x;
 			data[1] = y;
 			data[2] = z;
 			data[3] = w;
 		}
-		Vector::Vector(int s, float num) : size(s), data(new float[s]())
+		Vector::Vector(int s, float num) : size(s)
 		{
+			data.resize(s);
 			for (int i = 0; i < size; ++i)
 			{
 				data[i] = num;
@@ -117,7 +126,10 @@ namespace Petr_Math {
 			result[0] = data[1] * vec[2] - data[2] * vec[1];
 			result[1] = -(data[0] * vec[2] - data[2] * vec[0]);
 			result[2] = data[0] * vec[1] - data[1] * vec[0];
-			result[3] = data[3];
+			if (size > 3)
+			{
+				result[3] = data[3];
+			}
 			return result;
 		}
 		Vector Vector::normalize()
@@ -126,8 +138,20 @@ namespace Petr_Math {
 			float length = magnitude();
 			for (int i = 0; i < size; ++i)
 			{
-				result.data[i] = data[i] / length;
+				//cant divide by 0
+				if (length)
+				{
+					result.data[i] = data[i] / length;
+				}
+				else
+				{
+					result.data[i] = data[i];
+				}
 			}
 			return result;
+		}
+		float* Vector::getData()
+		{
+			return data.data();
 		}
 }

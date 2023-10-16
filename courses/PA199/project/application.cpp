@@ -211,9 +211,7 @@ void Application::prepare_camera()
 {
     camera.eye_position = Petr_Math::Vector(0.0f, 0.0f, 1.0f);
     camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 1.0f, 0.0f));
-    //camera.set_eye_position(-0.785398163f, 0.34906585f, 50.0f);
-    camera.projection_matrix = perspective(90.0f, width / height, 0.1f, 100.0f);
-    //auto res = camera.projection_matrix * one;
+    camera.projection_matrix = perspective(90.0f, width / height, 0.1f, 100.0f).transpose();
 }
 
 void Application::update(float delta) {}
@@ -331,17 +329,18 @@ void Application::drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_
     glBindVertexArray(VAO);
     assert(glGetError() == 0U);
 
-    glUniform3fv(glGetUniformLocation(shader_program_line, "color"), 1, color.data);
+    glUniform3fv(glGetUniformLocation(shader_program_line, "color"), 1, color.getData());
 
     Petr_Math::Matrix model(4, 1.0f, true);
     int modelLoc = glGetUniformLocation(shader_program_line, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());
     assert(glGetError() == 0U);
     int viewLoc = glGetUniformLocation(shader_program_line, "view");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, camera.get_view_matrix().data);
+    auto viewMatrix = camera.get_view_matrix().transpose();
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, viewMatrix.getData());
     assert(glGetError() == 0U);
     int projectionLoc = glGetUniformLocation(shader_program_line, "projection");
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection_matrix.data);
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection_matrix.getData());
     assert(glGetError() == 0U);
 
     glDrawArrays(GL_LINES, 0, 2);

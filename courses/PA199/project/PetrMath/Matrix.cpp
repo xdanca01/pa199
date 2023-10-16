@@ -14,31 +14,35 @@ namespace Petr_Math {
 		}
 	}
 
-	Matrix::Matrix(int const h, int const w) : width(w), height(h), data(new float[w*h]){}
+	Matrix::Matrix(int const h, int const w) : width(w), height(h){
+		data.resize(w * h);
+	}
 
 	Matrix::~Matrix()
 	{
-		delete[] data;
 	}
 
-	Matrix::Matrix(Matrix const& mat) : width(mat.width), height(mat.height), data(new float[mat.width * mat.height])
+	Matrix::Matrix(Matrix const& mat) : width(mat.width), height(mat.height)
 	{
+		data.resize(width * height);
 		for (int i = 0; i < height * width; ++i)
 		{
 			data[i] = mat.data[i];
 		}
 	}
 
-	Matrix::Matrix(int w, int h, float num) : width(w), height(h), data(new float[w * h])
+	Matrix::Matrix(int h, int w, float num) : width(w), height(h)
 	{
+		data.resize(width * height);
 		for (int i = 0; i < height * width; ++i)
 		{
 			data[i] = num;
 		}
 	}
 
-	Matrix::Matrix(int wh, float num, bool identity) : width(wh), height(wh), data(new float[wh * wh])
+	Matrix::Matrix(int wh, float num, bool identity) : width(wh), height(wh)
 	{
+		data.resize(wh * wh);
 		for (int i = 0; i < wh; ++i)
 		{
 			for (int j = 0; j < wh; ++j)
@@ -59,27 +63,31 @@ namespace Petr_Math {
 	{
 		width = mat.width;
 		height = mat.height;
-		data = new float[width * height];
+		data.resize(width * height);
 		for (int i = 0; i < height * width; ++i)
 		{
 			data[i] = mat.data[i];
 		}
 		return *this;
 	}
-	Matrix::Matrix(int w, int h, float* nums) : width(w), height(h), data(new float[w * h])
+
+	Matrix::Matrix(int h, int w, float* nums) : width(w), height(h)
 	{
+		data.resize(w * h);
 		for (int i = 0; i < height * width; ++i)
 		{
 			data[i] = nums[i];
 		}
 	}
 
+	//[row, column]
 	float Matrix::at(int const h, int const w) const
 	{
 		return data[w + h * width];
 	};
 
-	float& Matrix::at(int const w, int const h)
+	//[row, column]
+	float& Matrix::at(int const h, int const w)
 	{
 		return data[w + h * width];
 	}
@@ -108,7 +116,7 @@ namespace Petr_Math {
 		{
 			for (int j = 0; j < width; ++j)
 			{
-				result.data[j * height + i] = this->at(i, j);
+				result.at(j, i) = this->at(i, j);
 			}
 		}
 		return result;
@@ -128,9 +136,8 @@ namespace Petr_Math {
 		return result;
 	}
 
-	Petr_Math::Matrix::__access_helper__ Matrix::operator[](int row_index) const
+	float* Matrix::getData()
 	{
-		return __access_helper__{ data + row_index * width };
+		return data.data();
 	}
-
 }

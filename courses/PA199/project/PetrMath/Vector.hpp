@@ -1,13 +1,15 @@
 // This is a tutorial file. Feel free to remove it.
 #include <cmath>
+#include <vector>
 
 #pragma once
 
 namespace Petr_Math {
 
 	class Vector {
+	private:
+		std::vector<float> data;
 	public:
-		float* data;
 		int size;
 		void copy(Vector const& vec);
 		Vector(int s);
@@ -29,5 +31,6 @@ namespace Petr_Math {
 		float dot(Vector const& vec);
 		Vector cross(Vector const& vec);
 		Vector normalize();
+		float* getData();
 	};
 }

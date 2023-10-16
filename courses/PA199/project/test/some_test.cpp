@@ -60,7 +60,7 @@ TEST(some_test_suite, Matrix)
     Petr_Math::Matrix Twos(4, 4, 2.0f);
     //Multiplication
     Petr_Math::Matrix Result = Ones * Twos;
-    EXPECT_EQ(Result[0][0], 8.f) << "1*2 + 1*2 + 1*2 + 1*2 == 8";
+    EXPECT_EQ(Result.at(0,0), 8.f) << "1*2 + 1*2 + 1*2 + 1*2 == 8";
 
     //Transpose
     Petr_Math::Matrix Result2 = Result.transpose();
