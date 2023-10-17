@@ -10,6 +10,8 @@
 #include "glad/glad.h"
 #include "Camera.hpp"
 
+struct Vertex { float x, y, z, u, v; };
+
 class Application : public IApplication {
     // ----------------------------------------------------------------------------
     // Variables
@@ -71,4 +73,10 @@ class Application : public IApplication {
     void on_key_pressed(int key, int scancode, int action, int mods) override;
 
     void drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_Math::Vector color);
+
+
+    std::vector<Vertex> verticesCircle(float radius, int vertices, float angle, float y);
+
+
+    std::vector<Vertex> verticesGround();
 };

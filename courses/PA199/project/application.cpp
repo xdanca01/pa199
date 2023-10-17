@@ -348,3 +348,32 @@ void Application::drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_
 
     glDeleteBuffers(1, &vertex_buffer);
 }
+
+std::vector<Vertex> Application::verticesCircle(float radius, int verts, float angle, float y)
+{
+    std::vector<Vertex> vertices;
+    float x, z, u, v;
+    u = 1.f;
+    v = 1.f;
+    Vertex newVert;
+    float step = angle / (float)verts;
+    for (int i = 0; i < verts; ++i)
+    {
+        x = cos(step * i) * radius;
+        z = sin(step * i) * radius;
+        newVert = {x, y, z, u, v};
+        vertices.push_back(newVert);
+    }
+    return vertices;
+}
+
+std::vector<Vertex> Application::verticesGround()
+{
+    std::vector<Vertex> vertices;
+    Vertex middle = { 0.0f, 0.0f, 0.0f, 0.5f, 0.5f };
+    vertices.push_back(middle);
+    auto anotherVerts = verticesCircle(1.0f, 16, 360, 0.0f);
+    vertices.insert(vertices.end(), anotherVerts.begin(), anotherVerts.end());
+    vertices.push_back(vertices[0]);
+    return vertices;
+}
