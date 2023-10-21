@@ -9,14 +9,18 @@
 #include "iapplication.h"
 #include "glad/glad.h"
 #include "Camera.hpp"
+#include "RenderObject.hpp"
 
 struct Vertex { float x, y, z, u, v; };
+
+#define D2R M_PI/180.0f
 
 class Application : public IApplication {
     // ----------------------------------------------------------------------------
     // Variables
     // ----------------------------------------------------------------------------
   private:
+    Petr_Math::Matrix model;
     float red = 0.0f;
     float green = 0.0f;
     float blue = 0.0f;
@@ -33,6 +37,7 @@ class Application : public IApplication {
     GLuint Camerabuffer;
     GLuint VBO;
     GLuint VAO;
+    std::vector<RenderObject> objects;
 
     // ----------------------------------------------------------------------------
     // Constructors & Destructors
@@ -74,9 +79,12 @@ class Application : public IApplication {
 
     void drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_Math::Vector color);
 
+    void drawCircle();
 
-    std::vector<Vertex> verticesCircle(float radius, int vertices, float angle, float y);
+    void createObjects();
+
+    std::vector<Vertex2> verticesCircle(float radius, int vertices, float angle, float y);
 
 
-    std::vector<Vertex> verticesGround();
+    std::vector<Vertex2> verticesGround();
 };

@@ -11,7 +11,6 @@
 #include <filesystem>
 #include <iostream>
 
-
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
     std::filesystem::path const current = std::filesystem::current_path();
@@ -61,6 +60,7 @@ static GLuint load_texture(std::filesystem::path const& path)
 
 Application::Application(int initial_width, int initial_height, std::vector<std::string> arguments)
     : IApplication(initial_width, initial_height, arguments)
+    , model(4, 1.0f, true)
     , vertex_shader(load_shader(lecture_folder_path / "data" / "shaders" / "sample.vert", GL_VERTEX_SHADER))
     , fragment_shader(load_shader(lecture_folder_path / "data" / "shaders" / "sample.frag", GL_FRAGMENT_SHADER))
     , vertex_shader_line(load_shader(lecture_folder_path / "data" / "shaders" / "line.vert", GL_VERTEX_SHADER))
@@ -167,6 +167,7 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
             }())
 {
     prepare_camera();
+    createObjects();
     glViewport(0, 0, width, height);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -192,7 +193,6 @@ Application::~Application()
 
 Petr_Math::Matrix Application::perspective(double fov, double aspect, double near, double far)
 {
-    float D2R = M_PI / 180.0f;
     fov = D2R * fov;
     float yScale = 1.0f / tan(fov / 2);
     float xScale = yScale * aspect;
@@ -241,15 +241,15 @@ void Application::render() {
     float red[3] = { 1.0f, 0.0f, 0.0f };
     glUniform3fv(glGetUniformLocation(shader_program_line, "color"), 1, red);
 
-    Petr_Math::Matrix model(4, 1.0f, true);
+
     int modelLoc = glGetUniformLocation(shader_program_line, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());
     assert(glGetError() == 0U);
     int viewLoc = glGetUniformLocation(shader_program_line, "view");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, camera.get_view_matrix().data);
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, camera.get_view_matrix().getData());
     assert(glGetError() == 0U);
     int projectionLoc = glGetUniformLocation(shader_program_line, "projection");
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection_matrix.data);
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection_matrix.getData());
     assert(glGetError() == 0U);
 
     glDrawArrays(GL_LINES, 0, 2);
@@ -257,7 +257,6 @@ void Application::render() {
 
     */
     Petr_Math::Vector start2(0.0f, 0.0f, 5.0f, 1.0f);
-    auto tmp = camera.projection_matrix * start2;
     Petr_Math::Vector start(0.0f, 0.0f, 0.0f);
     Petr_Math::Vector endX(1.0f, 0.0f, 0.0f);
     Petr_Math::Vector endY(0.0f, 1.0f, 0.0f);
@@ -265,11 +264,10 @@ void Application::render() {
     drawLine(start, endX, endX);
     drawLine(start, endY, endY);
     drawLine(start, endZ, endZ);
-    Petr_Math::Vector endZ2(100.0f, 0.0f, -100.0f);
-    //drawLine(start, endZ2, endZ);
 
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-    assert(glGetError() == 0U);
+    //assert(glGetError() == 0U);
+    drawCircle();
 }
 
 void Application::render_ui() {}
@@ -311,27 +309,25 @@ void Application::drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_
         { start[0], start[1], start[2], },
         { end[0], end[1], end[2] },
     };
-    GLuint vertex_buffer;
-    glGenBuffers(1, &vertex_buffer);
+    GLuint vertex_buffer2;
+    glGenBuffers(1, &vertex_buffer2);
     assert(glGetError() == 0U);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer2);
     assert(glGetError() == 0U);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices.front(), GL_STATIC_DRAW);
     assert(glGetError() == 0U);
     glEnableVertexAttribArray(0);
     assert(glGetError() == 0U);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
-    assert(glGetError() == 0U);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    assert(glGetError() == 0U);
 
     glBindVertexArray(VAO);
     assert(glGetError() == 0U);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
+    assert(glGetError() == 0U);
+
+    
 
     glUniform3fv(glGetUniformLocation(shader_program_line, "color"), 1, color.getData());
 
-    Petr_Math::Matrix model(4, 1.0f, true);
     int modelLoc = glGetUniformLocation(shader_program_line, "model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());
     assert(glGetError() == 0U);
@@ -346,17 +342,44 @@ void Application::drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_
     glDrawArrays(GL_LINES, 0, 2);
     assert(glGetError() == 0U);
 
-    glDeleteBuffers(1, &vertex_buffer);
+    glDeleteBuffers(1, &vertex_buffer2);
 }
 
-std::vector<Vertex> Application::verticesCircle(float radius, int verts, float angle, float y)
+void Application::drawCircle()
 {
-    std::vector<Vertex> vertices;
+    glUseProgram(shader_program);
+    assert(glGetError() == 0U);
+    int modelLoc = glGetUniformLocation(shader_program, "model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());
+    assert(glGetError() == 0U);
+    int viewLoc = glGetUniformLocation(shader_program, "view");
+    auto viewMatrix = camera.get_view_matrix().transpose();
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, viewMatrix.getData());
+    assert(glGetError() == 0U);
+    int projectionLoc = glGetUniformLocation(shader_program, "projection");
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection_matrix.getData());
+    assert(glGetError() == 0U);
+    objects[0].Render();
+}
+
+void Application::createObjects()
+{
+    //Create ground
+    auto vertices = verticesGround();
+    RenderObject ground(vertices);
+    objects.push_back(ground);
+}
+
+std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float angle, float y)
+{
+    std::vector<Vertex2> vertices;
     float x, z, u, v;
     u = 1.f;
     v = 1.f;
-    Vertex newVert;
-    float step = angle / (float)verts;
+    Vertex2 newVert;
+    //To rad
+    angle = angle * D2R;
+    float step = angle / ((float)verts - 1.0f);
     for (int i = 0; i < verts; ++i)
     {
         x = cos(step * i) * radius;
@@ -367,13 +390,12 @@ std::vector<Vertex> Application::verticesCircle(float radius, int verts, float a
     return vertices;
 }
 
-std::vector<Vertex> Application::verticesGround()
+std::vector<Vertex2> Application::verticesGround()
 {
-    std::vector<Vertex> vertices;
-    Vertex middle = { 0.0f, 0.0f, 0.0f, 0.5f, 0.5f };
+    std::vector<Vertex2> vertices;
+    Vertex2 middle = { 0.0f, 0.0f, 0.0f, 0.5f, 0.5f };
     vertices.push_back(middle);
-    auto anotherVerts = verticesCircle(1.0f, 16, 360, 0.0f);
+    auto anotherVerts = verticesCircle(1.0f, 4, 360, 0.0f);
     vertices.insert(vertices.end(), anotherVerts.begin(), anotherVerts.end());
-    vertices.push_back(vertices[0]);
     return vertices;
 }
