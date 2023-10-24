@@ -85,8 +85,12 @@ class Application : public IApplication {
 
     void createObjects();
 
-    std::vector<Vertex2> verticesCircle(float radius, int vertices, float angle, float y);
+    std::vector<Vertex2> verticesCircle(float radius, int vertices, float angle, float y, float angleOffset = 0.0f);
 
     std::vector<Vertex2> verticesGround();
-    std::vector<Vertex2> VerticesPaddle();
+    std::vector<Vertex2> VerticesPaddle(int points, float verticesTopR, float yBottom, float height, float angle);
+    std::vector<Vertex2> verticesBall(float radius, int rows, int cols, float yBottom);
+
+    void VerticesToTriangles(std::vector<Vertex2>& v1, std::vector<Vertex2>& v2, std::vector<Vertex2>& output, bool clockwise);
+    void VerticesToTriangles(std::vector<Vertex2>& v1, Vertex2& v2, std::vector<Vertex2>& output, bool clockwise);
 };

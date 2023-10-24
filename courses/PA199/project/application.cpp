@@ -11,6 +11,8 @@
 #include <filesystem>
 #include <iostream>
 
+#define DEBUG true
+
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
     std::filesystem::path const current = std::filesystem::current_path();
@@ -169,6 +171,11 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
     prepare_camera();
     createObjects();
     glViewport(0, 0, width, height);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+    /*glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);*/
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -215,7 +222,7 @@ void Application::prepare_camera()
 {
     camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 1.0f);
     camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 1.0f, -1.0f));
-    camera.projection_matrix = perspective(90.0f, width / height, 0.1f, 100.0f).transpose();
+    camera.projection_matrix = perspective(90.0f, width / height, 0.1f, 10.0f).transpose();
 }
 
 void Application::update(float delta) {}
@@ -223,9 +230,13 @@ void Application::update(float delta) {}
 void Application::render() {
     // Sets the clear color.
     glClearColor(red, green, blue, 1.0f);
+    
     // Clears the window using the above color.
     glClear(GL_COLOR_BUFFER_BIT);
-
+    if (DEBUG)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }    
     /*glUseProgram(shader_program);
     assert(glGetError() == 0U);
     glBindVertexArray(vertex_arrays);
@@ -376,13 +387,21 @@ void Application::createObjects()
     auto vertices = verticesGround();
     RenderObject ground(vertices, FAN);
     objects.push_back(ground);
-    //Create paddle
-    vertices = VerticesPaddle();
-    RenderObject paddle1(vertices, STRIP);
+    //Create paddle 1 
+    vertices = VerticesPaddle(15, 0.1f, 0.0f, 0.05f, 30.0f);
+    RenderObject paddle1(vertices, INDICES);
     objects.push_back(paddle1);
+    //Create paddle 2
+    vertices = VerticesPaddle(15, -0.1f, 0.0f, 0.05f, 30.0f);
+    RenderObject paddle2(vertices, INDICES);
+    objects.push_back(paddle2);
+
+    vertices = verticesBall(0.01f, 8, 16, 0.0f);
+    RenderObject ball(vertices, INDICES);
+    objects.push_back(ball);
 ;}
 
-std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float angle, float y)
+std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float angle, float y, float angleOffset)
 {
     std::vector<Vertex2> vertices;
     float x, z, u, v;
@@ -393,10 +412,13 @@ std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float 
     //To rad
     angle = angle * D2R;
     float step = angle / ((float)verts - 1.0f);
+    //MOVE angle by offset
+    float offset = angleOffset * D2R;
     for (int i = 0; i < verts; ++i)
     {
-        x = cos(step * i) * radius;
-        z = sin(step * i) * radius;
+        //MOVE angle by offset
+        x = cos(step * i + offset) * radius;
+        z = sin(step * i + offset) * radius;
         newVert = {x, y, z, u, v};
         vertices.push_back(newVert);
         if (i == 0)
@@ -428,55 +450,140 @@ std::vector<Vertex2> Application::verticesGround()
     Vertex2 middle = { 0.0f, 0.0f, 0.0f, 0.5f, 0.5f };
     vertices.push_back(middle);
     auto anotherVerts = verticesCircle(0.1f, 150, 360, 0.0f);
-    vertices.insert(vertices.end(), anotherVerts.begin(), anotherVerts.end());
+    vertices.insert(vertices.end(), anotherVerts.rbegin(), anotherVerts.rend());
     return vertices;
 }
 
-std::vector<Vertex2> Application::VerticesPaddle()
+std::vector<Vertex2> Application::VerticesPaddle(int points, float verticesTopR, float yBottom, float height,float angle)
 {
     std::vector<Vertex2> vertices;
     std::vector<Vertex2> verticesTop;
     std::vector<Vertex2> verticesBottom;
-    float verticesTopR = 0.1f;
-    float y = 0.0f;
-    float height = 0.1f;
-    auto verticesTop1 = verticesCircle(verticesTopR - 0.01f, 15, 30.0f, y + height);
-    auto verticesTop2 = verticesCircle(verticesTopR, 15, 30.0f, y + height);
-    auto verticesBottom1 = verticesCircle(verticesTopR - 0.01f, 15, 30.0f, y);
-    auto verticesBottom2 = verticesCircle(verticesTopR, 15, 30.0f, y);
-    //Top
-    for (int i = 0; i < verticesTop1.size(); ++i)
-    {
-        vertices.push_back(verticesTop1[i]);
-        vertices.push_back(verticesTop2[i]);
-    }
+    float offset = verticesTopR > 0 ? 0.01f : -0.01f;
+    auto verticesTop1 = verticesCircle(verticesTopR - offset, points, angle, yBottom + height);
+    auto verticesTop2 = verticesCircle(verticesTopR, points, angle, yBottom + height);
+    auto verticesBottom1 = verticesCircle(verticesTopR - offset, points, angle, yBottom);
+    auto verticesBottom2 = verticesCircle(verticesTopR, points, angle, yBottom);
+
+    //NORMAL is anticlockwise up!!!!
+    //Counterclockwise is frontface
+
     //SideOutside
-    for (int i = verticesTop2.size() - 1; i >= 0; --i)
-    {
-        vertices.push_back(verticesTop2[i]);
-        vertices.push_back(verticesBottom2[i]);
-    }
+    VerticesToTriangles(verticesBottom2, verticesTop2, vertices, true);
+    //SideInside
+    VerticesToTriangles(verticesBottom1, verticesTop1, vertices, false);
+    //Top
+    VerticesToTriangles(verticesTop1, verticesTop2, vertices, false);
     //Bottom
-    for (int i = 0; i < verticesBottom1.size(); ++i)
-    {
-        vertices.push_back(verticesBottom2[i]);
-        vertices.push_back(verticesBottom1[i]);
-    }
+    VerticesToTriangles(verticesBottom1, verticesBottom2, vertices, true);
     //SideLeft
     vertices.push_back(verticesBottom1[verticesBottom1.size() - 1]);
     vertices.push_back(verticesBottom2[verticesBottom2.size() - 1]);
-    vertices.push_back(verticesTop2[verticesTop2.size() - 1]);
     vertices.push_back(verticesTop1[verticesTop1.size() - 1]);
-    //SideInside
-    for (int i = verticesTop1.size() - 1; i >= 0; --i)
-    {
-        vertices.push_back(verticesTop1[i]);
-        vertices.push_back(verticesBottom1[i]);
-    }
-    //SideRight
-    vertices.push_back(verticesBottom1[verticesBottom1.size() - 1]);
+    vertices.push_back(verticesTop1[verticesTop1.size() - 1]);
     vertices.push_back(verticesBottom2[verticesBottom2.size() - 1]);
-    vertices.push_back(verticesTop1[verticesTop1.size() - 1]);
     vertices.push_back(verticesTop2[verticesTop2.size() - 1]);
+    //SideRight
+    vertices.push_back(verticesBottom2[0]);
+    vertices.push_back(verticesBottom1[0]);
+    vertices.push_back(verticesTop2[0]);
+    vertices.push_back(verticesTop2[0]);
+    vertices.push_back(verticesBottom1[0]);
+    vertices.push_back(verticesTop1[0]);
+    
     return vertices;
+}
+
+std::vector<Vertex2> Application::verticesBall(float radius, int rows, int cols, float yBottom)
+{
+    std::vector<Vertex2> vertices;
+    std::vector<std::vector<Vertex2>> rowsOfVertices;
+    float angle = 360.0f / cols;
+    float angleRow = 180.0f / rows;
+    float rowStepY = (radius * 2) / rows;
+    float y;
+    Vertex2 downPoint = { 0.0f, yBottom, 0.0f, 0.5f, 0.5f };
+    Vertex2 topPoint = { 0.0f, yBottom + radius * 2, 0.0f, 0.5f, 0.5f };
+    std::vector<float> radiuses;
+    //Generate radiuses
+    for (int row = 1; row < rows; ++row)
+    {
+        radiuses.push_back(radius * sin(row * D2R * angleRow));
+    }
+    //first row is point y = yBottom and last row is also point y = (yBottom + radius * 2)
+    for (int row = 1; row < rows; ++row)
+    {
+        y = yBottom + radius - radius * cos(row * angleRow * D2R);
+        rowsOfVertices.push_back(verticesCircle(radiuses[row - 1], cols + 1, 360.0f, y));
+        if (row == 1)
+        {
+            VerticesToTriangles(rowsOfVertices[0], downPoint, vertices, true);
+        }
+        else
+        {
+            VerticesToTriangles(rowsOfVertices[row - 2], rowsOfVertices[row - 1], vertices, false);
+        }
+    }
+    VerticesToTriangles(rowsOfVertices[rows - 2], topPoint, vertices, false);
+    return vertices;
+}
+
+void Application::VerticesToTriangles(std::vector<Vertex2>& v1, std::vector<Vertex2>& v2, std::vector<Vertex2>& output, bool clockwise)
+{
+    //Clockwise
+    if (clockwise)
+    {
+        for (int i = 0; i < v1.size() - 1; ++i)
+        {
+            //first triangle clockwise (opposite normal)
+            output.push_back(v1[i]);
+            output.push_back(v2[i]);
+            output.push_back(v1[i + 1]);
+            //second triangle clockwise
+            output.push_back(v2[i]);
+            output.push_back(v2[i + 1]);
+            output.push_back(v1[i + 1]);
+        }
+    }
+    //Anticlockwise
+    else
+    {
+        for (int i = 0; i < v1.size() - 1; ++i)
+        {
+            //first triangle anticlockwise
+            output.push_back(v1[i]);
+            output.push_back(v1[i + 1]);
+            output.push_back(v2[i]);
+            //second triangle anticlockwise
+            output.push_back(v2[i]);
+            output.push_back(v1[i + 1]);
+            output.push_back(v2[i + 1]);
+        }
+    }
+}
+
+void Application::VerticesToTriangles(std::vector<Vertex2>& v1, Vertex2& v2, std::vector<Vertex2>& output, bool clockwise)
+{
+    //Clockwise
+    if (clockwise)
+    {
+        for (int i = 0; i < v1.size() - 1; ++i)
+        {
+            //first triangle clockwise (opposite normal)
+            output.push_back(v1[i]);
+            output.push_back(v2);
+            output.push_back(v1[i + 1]);
+        }
+    }
+    //Anticlockwise
+    else
+    {
+        for (int i = 0; i < v1.size() - 1; ++i)
+        {
+            //first triangle anticlockwise
+            output.push_back(v1[i]);
+            output.push_back(v1[i + 1]);
+            output.push_back(v2);
+        }
+    }
 }
