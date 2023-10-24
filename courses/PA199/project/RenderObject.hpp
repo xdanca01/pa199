@@ -58,15 +58,15 @@ public:
         }())
     {
         //x, y, z
-        glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 3);
+        glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 5);
         //u, v
-        glVertexArrayVertexBuffer(VAO, 1, VBO, sizeof(float) * 3, sizeof(float) * 2);
+        glVertexArrayVertexBuffer(VAO, 1, VBO, sizeof(float) * 3, sizeof(float) * 5);
         glVertexArrayVertexBuffer(VAO, 2, index_buffer, 0, sizeof(GLuint));
         glEnableVertexArrayAttrib(VAO, 0);
         glEnableVertexArrayAttrib(VAO, 1);
         glEnableVertexArrayAttrib(VAO, 2);
         glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
-        glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 3);
+        glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
         glVertexArrayAttribFormat(VAO, 2, 1, GL_UNSIGNED_INT, GL_FALSE, 0);
         glVertexArrayAttribBinding(VAO, 0, 0);
         glVertexArrayAttribBinding(VAO, 1, 1);
@@ -84,22 +84,27 @@ public:
                 GLuint vertex_buffer;
                 glCreateBuffers(1, &vertex_buffer);
                 assert(glGetError() == 0U);
-                glNamedBufferStorage(vertex_buffer, v.size() * sizeof(Vertex2), v.data(), GL_DYNAMIC_STORAGE_BIT);
+                //glNamedBufferStorage(vertex_buffer, v.size() * sizeof(Vertex2), v.data(), GL_DYNAMIC_STORAGE_BIT);
+                glNamedBufferData(vertex_buffer, v.size() * sizeof(Vertex2), v.data(), GL_STATIC_DRAW);
                 assert(glGetError() == 0U);
                 return vertex_buffer;
             }()),
     index_buffer(0)
     {
         //x, y, z
-        glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 3);
+        glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 5);
         //u, v
-        glVertexArrayVertexBuffer(VAO, 1, VBO, sizeof(float) * 3, sizeof(float) * 2);
+        glVertexArrayVertexBuffer(VAO, 1, VBO, sizeof(float) * 3, sizeof(float) * 5);
+        assert(glGetError() == 0U);
         glEnableVertexArrayAttrib(VAO, 0);
         glEnableVertexArrayAttrib(VAO, 1);
+        assert(glGetError() == 0U);
         glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
-        glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 3);
+        glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
+        assert(glGetError() == 0U);
         glVertexArrayAttribBinding(VAO, 0, 0);
         glVertexArrayAttribBinding(VAO, 1, 1);
+        assert(glGetError() == 0U);
     };
 
     void Render()
@@ -119,6 +124,17 @@ public:
             assert(glGetError() == 0U);
         }
     };
+
+    void deleteBuffers()
+    {
+        glDeleteVertexArrays(1, &VAO);
+        glDeleteBuffers(1, &VBO);
+        if (indices.size() > 0)
+        {
+            glDeleteBuffers(1, &index_buffer);
+        }
+    }
+
 
     ~RenderObject()
     {

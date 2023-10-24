@@ -7,6 +7,11 @@ Camera::Camera() : eye_position(3, 0.0f), projection_matrix(4, 1.0f, true), view
 {
 }
 
+void Camera::set_view_matrix(Petr_Math::Matrix viewMat)
+{
+    view_matrix = viewMat;
+}
+
 void Camera::set_view_matrix(Petr_Math::Vector position, Petr_Math::Vector target, Petr_Math::Vector up)
 {
     position = position.normalize();
@@ -22,6 +27,8 @@ void Camera::set_view_matrix(Petr_Math::Vector position, Petr_Math::Vector targe
     view_matrix = Petr_Math::Matrix(4, 4, viewMatrixValues);
     return;
 }
+
+
 
 Petr_Math::Matrix Camera::get_view_matrix() const {
     return view_matrix;

@@ -185,6 +185,10 @@ Application::~Application()
     glDeleteProgram(shader_program);
     glDeleteShader(fragment_shader);
     glDeleteShader(vertex_shader);
+    for (auto obj : objects)
+    {
+        obj.deleteBuffers();
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -209,8 +213,8 @@ Petr_Math::Matrix Application::perspective(double fov, double aspect, double nea
 
 void Application::prepare_camera()
 {
-    camera.eye_position = Petr_Math::Vector(0.0f, 0.0f, 1.0f);
-    camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 1.0f, 0.0f));
+    camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 0.0f);
+    camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 0.0f, -1.0f));
     camera.projection_matrix = perspective(90.0f, width / height, 0.1f, 100.0f).transpose();
 }
 
@@ -230,9 +234,6 @@ void Application::render() {
     assert(glGetError() == 0U);
     glBindTexture(GL_TEXTURE_2D, texture);
     assert(glGetError() == 0U);*/
-
-    glUseProgram(shader_program_line);
-    assert(glGetError() == 0U);
     /*glBindVertexArray(VAO);
     assert(glGetError() == 0U);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -256,6 +257,7 @@ void Application::render() {
     assert(glGetError() == 0U);
 
     */
+    drawCircle();
     Petr_Math::Vector start2(0.0f, 0.0f, 5.0f, 1.0f);
     Petr_Math::Vector start(0.0f, 0.0f, 0.0f);
     Petr_Math::Vector endX(1.0f, 0.0f, 0.0f);
@@ -267,7 +269,7 @@ void Application::render() {
 
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     //assert(glGetError() == 0U);
-    drawCircle();
+    
 }
 
 void Application::render_ui() {}
@@ -304,6 +306,8 @@ void Application::on_key_pressed(int key, int scancode, int action, int mods) {
 
 void Application::drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_Math::Vector color)
 {
+    glUseProgram(shader_program_line);
+    assert(glGetError() == 0U);
     struct Vertex { float x, y, z; };
     std::vector<Vertex> const vertices{
         { start[0], start[1], start[2], },
@@ -376,6 +380,7 @@ std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float 
     float x, z, u, v;
     u = 1.f;
     v = 1.f;
+    float xMin, xMax, zMin, zMax;
     Vertex2 newVert;
     //To rad
     angle = angle * D2R;
@@ -386,6 +391,25 @@ std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float 
         z = sin(step * i) * radius;
         newVert = {x, y, z, u, v};
         vertices.push_back(newVert);
+        if (i == 0)
+        {
+            xMin = x;
+            xMax = x;
+            zMin = z;
+            zMax = z;
+        }
+        else
+        {
+            xMin = fminf(x, xMin);
+            zMin = fminf(x, zMin);
+            xMax = fmaxf(x, xMax);
+            zMax = fmaxf(x, zMax);
+        }
+    }
+    for (int i = 0; i < vertices.size(); ++i)
+    {
+        vertices[i].u = (vertices[i].x - xMin) / (xMax - xMin);
+        vertices[i].v = (vertices[i].z - zMin) / (zMax - zMin);
     }
     return vertices;
 }
@@ -395,7 +419,7 @@ std::vector<Vertex2> Application::verticesGround()
     std::vector<Vertex2> vertices;
     Vertex2 middle = { 0.0f, 0.0f, 0.0f, 0.5f, 0.5f };
     vertices.push_back(middle);
-    auto anotherVerts = verticesCircle(1.0f, 4, 360, 0.0f);
+    auto anotherVerts = verticesCircle(0.1f, 150, 360, 0.0f);
     vertices.insert(vertices.end(), anotherVerts.begin(), anotherVerts.end());
     return vertices;
 }

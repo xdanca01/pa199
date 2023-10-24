@@ -10,6 +10,8 @@
 #include "glad/glad.h"
 #include "Camera.hpp"
 #include "RenderObject.hpp"
+#include "PetrMath/AxisAngle.hpp"
+#include "PetrMath/Quaternion.hpp"
 
 struct Vertex { float x, y, z, u, v; };
 

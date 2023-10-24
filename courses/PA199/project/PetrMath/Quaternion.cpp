@@ -85,4 +85,23 @@ namespace Petr_Math {
 		AxisAngle aa(Alpha, u / sinAlpha);
 		return aa;
 	}
+	Matrix Quaternion::ToRotationMatrix()
+	{
+		float data[16] = {0};
+		data[0] = 2 * (s * s + u[0] * u[0]) - 1;
+		data[1] = 2 * (u[0] * u[1] - s * u[2]);
+		data[2] = 2 * (u[0] * u[2] + s * u[1]);
+
+		data[5] = 2 * (u[1] * u[2] + s * u[2]);
+		data[6] = 2 * (s * s + u[1] * u[1]) - 1;
+		data[7] = 2 * (u[1] * u[2] - s * u[0]);
+
+		data[9] = 2 * (u[0] * u[2] - s * u[1]);
+		data[10] = 2 * (u[1] * u[2] + s * u[0]);
+		data[11] = 2 * (s * s + u[2] * u[2]) - 1;
+
+		data[15] = 1;
+		Matrix result(4,4,data);
+		return result;
+	}
 }

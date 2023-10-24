@@ -10,6 +10,7 @@ public:
     Petr_Math::Matrix projection_matrix;
     Camera();
 public:
+    void set_view_matrix(Petr_Math::Matrix viewMat);
     void set_view_matrix(Petr_Math::Vector position, Petr_Math::Vector target, Petr_Math::Vector up);
     //4x4
     Petr_Math::Matrix get_view_matrix() const;
