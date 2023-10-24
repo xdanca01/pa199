@@ -6,7 +6,7 @@ uniform sampler2D sample_texture;
 
 void main()
 {
-    final_color = vec4(1 - tex_coord.y, 0, 1 - tex_coord.x, 1);
+    final_color = vec4(tex_coord.x, 0, tex_coord.y, 1);
     //final_color = vec4(1, 1, 0, 1);
     
     //final_color = texture(sample_texture, tex_coord);

@@ -5,6 +5,12 @@
 #include <vector>
 
 struct Vertex2 { float x, y, z, u, v; };
+enum renderType
+{
+    FAN,
+    STRIP,
+    INDICES
+};
 
 class RenderObject {
 public:
@@ -14,8 +20,8 @@ public:
     GLuint index_buffer;
     std::vector<Vertex2> vertices;
     std::vector<int> indices;
-
-    RenderObject(std::vector<Vertex2> v, std::vector<int> i) : vertices(v), indices(i),
+    renderType type;
+    RenderObject(std::vector<Vertex2> v, std::vector<int> i, renderType t) : type(t), vertices(v), indices(i),
         VAO([]() -> GLuint {
         GLuint vertex_arrays;
         glGenVertexArrays(1, &vertex_arrays);
@@ -28,27 +34,15 @@ public:
                 GLuint vertex_buffer;
                 glCreateBuffers(1, &vertex_buffer);
                 assert(glGetError() == 0U);
-                glNamedBufferStorage(vertex_buffer, v.size() * sizeof(Vertex2), v.data(), GL_DYNAMIC_STORAGE_BIT);
+                glNamedBufferData(vertex_buffer, v.size() * sizeof(Vertex2), v.data(), GL_STATIC_DRAW);
                 assert(glGetError() == 0U);
-                /*glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-                assert(glGetError() == 0U);
-                glBufferData(GL_ARRAY_BUFFER, v.size() * sizeof(Vertex2), &v.front(), GL_STATIC_DRAW);
-                assert(glGetError() == 0U);
-                glEnableVertexAttribArray(0);
-                assert(glGetError() == 0U);
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex2), nullptr);
-                assert(glGetError() == 0U);
-                glEnableVertexAttribArray(1);
-                assert(glGetError() == 0U);
-                glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex2), (void*)(3 * sizeof(float)));
-                assert(glGetError() == 0U);*/
                 return vertex_buffer;
             }()),
         index_buffer([i]() -> GLuint {
             GLuint index_buffer;
             glCreateBuffers(1, &index_buffer);
             assert(glGetError() == 0U);
-            glNamedBufferStorage(index_buffer, i.size() * sizeof(GLuint), i.data(), GL_DYNAMIC_STORAGE_BIT);
+            glNamedBufferData(index_buffer, i.size() * sizeof(Vertex2), i.data(), GL_STATIC_DRAW);
             assert(glGetError() == 0U);
             /*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
             assert(glGetError() == 0U);
@@ -71,7 +65,7 @@ public:
         glVertexArrayAttribBinding(VAO, 0, 0);
         glVertexArrayAttribBinding(VAO, 1, 1);
     };
-    RenderObject(std::vector<Vertex2> v) : vertices(v),
+    RenderObject(std::vector<Vertex2> v, renderType t) : type(t), vertices(v),
         VAO([]() -> GLuint {
             GLuint vertex_arrays;
             glGenVertexArrays(1, &vertex_arrays);
@@ -84,7 +78,6 @@ public:
                 GLuint vertex_buffer;
                 glCreateBuffers(1, &vertex_buffer);
                 assert(glGetError() == 0U);
-                //glNamedBufferStorage(vertex_buffer, v.size() * sizeof(Vertex2), v.data(), GL_DYNAMIC_STORAGE_BIT);
                 glNamedBufferData(vertex_buffer, v.size() * sizeof(Vertex2), v.data(), GL_STATIC_DRAW);
                 assert(glGetError() == 0U);
                 return vertex_buffer;
@@ -112,15 +105,20 @@ public:
         glBindVertexArray(VAO);
         assert(glGetError() == 0U);
         
-        if (indices.size() > 0)
+        if (type == INDICES)
         {
             //TODO bind index buffer
             glDrawArrays(GL_TRIANGLES, 0, indices.size());
             assert(glGetError() == 0U);
         }
-        else
+        else if(type == FAN)
         {
             glDrawArrays(GL_TRIANGLE_FAN, 0, vertices.size());
+            assert(glGetError() == 0U);
+        }
+        else if (type == STRIP)
+        {
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size());
             assert(glGetError() == 0U);
         }
     };

@@ -213,8 +213,8 @@ Petr_Math::Matrix Application::perspective(double fov, double aspect, double nea
 
 void Application::prepare_camera()
 {
-    camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 0.0f);
-    camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 0.0f, -1.0f));
+    camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 1.0f);
+    camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 1.0f, -1.0f));
     camera.projection_matrix = perspective(90.0f, width / height, 0.1f, 100.0f).transpose();
 }
 
@@ -257,7 +257,7 @@ void Application::render() {
     assert(glGetError() == 0U);
 
     */
-    drawCircle();
+    drawObjects();
     Petr_Math::Vector start2(0.0f, 0.0f, 5.0f, 1.0f);
     Petr_Math::Vector start(0.0f, 0.0f, 0.0f);
     Petr_Math::Vector endX(1.0f, 0.0f, 0.0f);
@@ -349,7 +349,7 @@ void Application::drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_
     glDeleteBuffers(1, &vertex_buffer2);
 }
 
-void Application::drawCircle()
+void Application::drawObjects()
 {
     glUseProgram(shader_program);
     assert(glGetError() == 0U);
@@ -363,16 +363,24 @@ void Application::drawCircle()
     int projectionLoc = glGetUniformLocation(shader_program, "projection");
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection_matrix.getData());
     assert(glGetError() == 0U);
-    objects[0].Render();
+    for (auto obj : objects)
+    {
+        obj.Render();
+    }
+    //objects[1].Render();
 }
 
 void Application::createObjects()
 {
     //Create ground
     auto vertices = verticesGround();
-    RenderObject ground(vertices);
+    RenderObject ground(vertices, FAN);
     objects.push_back(ground);
-}
+    //Create paddle
+    vertices = VerticesPaddle();
+    RenderObject paddle1(vertices, STRIP);
+    objects.push_back(paddle1);
+;}
 
 std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float angle, float y)
 {
@@ -421,5 +429,54 @@ std::vector<Vertex2> Application::verticesGround()
     vertices.push_back(middle);
     auto anotherVerts = verticesCircle(0.1f, 150, 360, 0.0f);
     vertices.insert(vertices.end(), anotherVerts.begin(), anotherVerts.end());
+    return vertices;
+}
+
+std::vector<Vertex2> Application::VerticesPaddle()
+{
+    std::vector<Vertex2> vertices;
+    std::vector<Vertex2> verticesTop;
+    std::vector<Vertex2> verticesBottom;
+    float verticesTopR = 0.1f;
+    float y = 0.0f;
+    float height = 0.1f;
+    auto verticesTop1 = verticesCircle(verticesTopR - 0.01f, 15, 30.0f, y + height);
+    auto verticesTop2 = verticesCircle(verticesTopR, 15, 30.0f, y + height);
+    auto verticesBottom1 = verticesCircle(verticesTopR - 0.01f, 15, 30.0f, y);
+    auto verticesBottom2 = verticesCircle(verticesTopR, 15, 30.0f, y);
+    //Top
+    for (int i = 0; i < verticesTop1.size(); ++i)
+    {
+        vertices.push_back(verticesTop1[i]);
+        vertices.push_back(verticesTop2[i]);
+    }
+    //SideOutside
+    for (int i = verticesTop2.size() - 1; i >= 0; --i)
+    {
+        vertices.push_back(verticesTop2[i]);
+        vertices.push_back(verticesBottom2[i]);
+    }
+    //Bottom
+    for (int i = 0; i < verticesBottom1.size(); ++i)
+    {
+        vertices.push_back(verticesBottom2[i]);
+        vertices.push_back(verticesBottom1[i]);
+    }
+    //SideLeft
+    vertices.push_back(verticesBottom1[verticesBottom1.size() - 1]);
+    vertices.push_back(verticesBottom2[verticesBottom2.size() - 1]);
+    vertices.push_back(verticesTop2[verticesTop2.size() - 1]);
+    vertices.push_back(verticesTop1[verticesTop1.size() - 1]);
+    //SideInside
+    for (int i = verticesTop1.size() - 1; i >= 0; --i)
+    {
+        vertices.push_back(verticesTop1[i]);
+        vertices.push_back(verticesBottom1[i]);
+    }
+    //SideRight
+    vertices.push_back(verticesBottom1[verticesBottom1.size() - 1]);
+    vertices.push_back(verticesBottom2[verticesBottom2.size() - 1]);
+    vertices.push_back(verticesTop1[verticesTop1.size() - 1]);
+    vertices.push_back(verticesTop2[verticesTop2.size() - 1]);
     return vertices;
 }

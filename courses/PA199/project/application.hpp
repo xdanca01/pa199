@@ -81,12 +81,12 @@ class Application : public IApplication {
 
     void drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_Math::Vector color);
 
-    void drawCircle();
+    void drawObjects();
 
     void createObjects();
 
     std::vector<Vertex2> verticesCircle(float radius, int vertices, float angle, float y);
 
-
     std::vector<Vertex2> verticesGround();
+    std::vector<Vertex2> VerticesPaddle();
 };
