@@ -11,7 +11,7 @@
 #include <filesystem>
 #include <iostream>
 
-#define DEBUG true
+#define DEBUG false
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -396,9 +396,18 @@ void Application::createObjects()
     RenderObject paddle2(vertices, INDICES);
     objects.push_back(paddle2);
 
-    vertices = verticesBall(0.01f, 8, 16, 0.0f);
+    vertices = verticesBall(0.01f, 32, 64, 0.0f, 0.0f, 0.08f);
     RenderObject ball(vertices, INDICES);
     objects.push_back(ball);
+
+    int numOfBricks = 5;
+    float step = 360.0f / (float)numOfBricks;
+    for(int i = 0; i < numOfBricks; ++i)
+    {
+        vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, step, i * step);
+        RenderObject brick(vertices, INDICES);
+        objects.push_back(brick);
+    }
 ;}
 
 std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float angle, float y, float angleOffset)
@@ -451,8 +460,85 @@ std::vector<Vertex2> Application::verticesGround()
     vertices.push_back(middle);
     auto anotherVerts = verticesCircle(0.1f, 150, 360, 0.0f);
     vertices.insert(vertices.end(), anotherVerts.rbegin(), anotherVerts.rend());
+    Petr_Math::Vector normalUp(0.0f, 1.0f, 0.0f);
+    SetNormalForEachVertex(vertices, normalUp, vertices.size());
     return vertices;
 }
+std::vector<Vertex2> Application::VerticesBrick(int points, float verticesTopR, float yBottom, float height, float angle, float offset)
+{
+    std::vector<Vertex2> vertices;
+    std::vector<Vertex2> verticesTop;
+    std::vector<Vertex2> verticesBottom;
+    float width =  0.01f;
+    auto verticesTop1 = verticesCircle(verticesTopR - width, points, angle, yBottom + height, offset);
+    auto verticesTop2 = verticesCircle(verticesTopR, points, angle, yBottom + height, offset);
+    auto verticesBottom1 = verticesCircle(verticesTopR - width, points, angle, yBottom, offset);
+    auto verticesBottom2 = verticesCircle(verticesTopR, points, angle, yBottom, offset);
+
+    Petr_Math::Vector normalUp(0.0f, 1.0f, 0.0f);
+    Petr_Math::Vector normalDown(0.0f, -1.0f, 0.0f);
+    Vertex2 center = { 0.0f, 0.0f, 0.0f };
+    int cnt = 0;
+    //NORMAL is anticlockwise up!!!!
+    //Counterclockwise is frontface
+
+    //SideOutside
+    VerticesToTriangles(verticesBottom2, verticesTop2, vertices, true);
+    cnt = vertices.size();
+    CalcNormalsToCenter(vertices, center, true, cnt);
+
+    //SideInside
+    VerticesToTriangles(verticesBottom1, verticesTop1, vertices, false);
+    //Count added vertices
+    cnt = vertices.size() - cnt;
+    //Calc normals for added vertices
+    CalcNormalsToCenter(vertices, center, false, cnt);
+    cnt = vertices.size();
+
+    //Top
+    VerticesToTriangles(verticesTop1, verticesTop2, vertices, false);
+    cnt = vertices.size() - cnt;
+    SetNormalForEachVertex(vertices, normalUp, cnt);
+    cnt = vertices.size();
+
+    //Bottom
+    VerticesToTriangles(verticesBottom1, verticesBottom2, vertices, true);
+    cnt = vertices.size() - cnt;
+    SetNormalForEachVertex(vertices, normalDown, cnt);
+
+    //SideLeft
+    vertices.push_back(verticesBottom1[verticesBottom1.size() - 1]);
+    vertices.push_back(verticesBottom2[verticesBottom2.size() - 1]);
+    vertices.push_back(verticesTop1[verticesTop1.size() - 1]);
+    vertices.push_back(verticesTop1[verticesTop1.size() - 1]);
+    vertices.push_back(verticesBottom2[verticesBottom2.size() - 1]);
+    vertices.push_back(verticesTop2[verticesTop2.size() - 1]);
+    auto v1 = verticesBottom1[verticesBottom1.size() - 1];
+    auto v2 = verticesBottom2[verticesBottom2.size() - 1];
+    auto v3 = verticesTop1[verticesTop1.size() - 1];
+    Petr_Math::Vector Vec1(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+    Petr_Math::Vector Vec2(v3.x - v1.x, v3.y - v1.y, v3.z - v1.z);
+    auto normalLeft = Vec2.cross(Vec1).normalize();
+    SetNormalForEachVertex(vertices, normalLeft, 6);
+
+    //SideRight
+    vertices.push_back(verticesBottom2[0]);
+    vertices.push_back(verticesBottom1[0]);
+    vertices.push_back(verticesTop2[0]);
+    vertices.push_back(verticesTop2[0]);
+    vertices.push_back(verticesBottom1[0]);
+    vertices.push_back(verticesTop1[0]);
+    v1 = verticesBottom2[0];
+    v2 = verticesBottom1[0];
+    v3 = verticesTop2[0];
+    Vec1 = Petr_Math::Vector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+    Vec2 = Petr_Math::Vector(v3.x - v1.x, v3.y - v1.y, v3.z - v1.z);
+    auto normalRight = Vec2.cross(Vec1).normalize();
+    SetNormalForEachVertex(vertices, normalRight, 6);
+
+    return vertices;
+}
+
 
 std::vector<Vertex2> Application::VerticesPaddle(int points, float verticesTopR, float yBottom, float height,float angle)
 {
@@ -468,14 +554,36 @@ std::vector<Vertex2> Application::VerticesPaddle(int points, float verticesTopR,
     //NORMAL is anticlockwise up!!!!
     //Counterclockwise is frontface
 
-    //SideOutside
+    Petr_Math::Vector normalUp(0.0f, 1.0f, 0.0f);
+    Petr_Math::Vector normalDown(0.0f, -1.0f, 0.0f);
+    Vertex2 center = { 0.0f, 0.0f, 0.0f };
+    int cnt = 0;
+
+    //SideOutside - normals outgoing from center
     VerticesToTriangles(verticesBottom2, verticesTop2, vertices, true);
+    cnt = vertices.size();
+    CalcNormalsToCenter(vertices, center, true, cnt);
+
     //SideInside
     VerticesToTriangles(verticesBottom1, verticesTop1, vertices, false);
+    //Count added vertices
+    cnt = vertices.size() - cnt;
+    //Calc normals for added vertices
+    CalcNormalsToCenter(vertices, center, false, cnt);
+    cnt = vertices.size();
+
     //Top
     VerticesToTriangles(verticesTop1, verticesTop2, vertices, false);
+    cnt = vertices.size() - cnt;
+    SetNormalForEachVertex(vertices, normalUp, cnt);
+    cnt = vertices.size();
+
     //Bottom
     VerticesToTriangles(verticesBottom1, verticesBottom2, vertices, true);
+    cnt = vertices.size() - cnt;
+    SetNormalForEachVertex(vertices, normalDown, cnt);
+    cnt = vertices.size();
+
     //SideLeft
     vertices.push_back(verticesBottom1[verticesBottom1.size() - 1]);
     vertices.push_back(verticesBottom2[verticesBottom2.size() - 1]);
@@ -483,6 +591,14 @@ std::vector<Vertex2> Application::VerticesPaddle(int points, float verticesTopR,
     vertices.push_back(verticesTop1[verticesTop1.size() - 1]);
     vertices.push_back(verticesBottom2[verticesBottom2.size() - 1]);
     vertices.push_back(verticesTop2[verticesTop2.size() - 1]);
+    auto v1 = verticesBottom1[verticesBottom1.size() - 1];
+    auto v2 = verticesBottom2[verticesBottom2.size() - 1];
+    auto v3 = verticesTop1[verticesTop1.size() - 1];
+    Petr_Math::Vector Vec1(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+    Petr_Math::Vector Vec2(v3.x - v1.x, v3.y - v1.y, v3.z - v1.z);
+    auto normalLeft = Vec2.cross(Vec1).normalize();
+    SetNormalForEachVertex(vertices, normalLeft, 6);
+
     //SideRight
     vertices.push_back(verticesBottom2[0]);
     vertices.push_back(verticesBottom1[0]);
@@ -490,11 +606,18 @@ std::vector<Vertex2> Application::VerticesPaddle(int points, float verticesTopR,
     vertices.push_back(verticesTop2[0]);
     vertices.push_back(verticesBottom1[0]);
     vertices.push_back(verticesTop1[0]);
-    
+    v1 = verticesBottom2[0];
+    v2 = verticesBottom1[0];
+    v3 = verticesTop2[0];
+    Vec1 = Petr_Math::Vector(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
+    Vec2 = Petr_Math::Vector(v3.x - v1.x, v3.y - v1.y, v3.z - v1.z);
+    auto normalRight = Vec2.cross(Vec1).normalize();
+    SetNormalForEachVertex(vertices, normalRight, 6);
+
     return vertices;
 }
 
-std::vector<Vertex2> Application::verticesBall(float radius, int rows, int cols, float yBottom)
+std::vector<Vertex2> Application::verticesBall(float radius, int rows, int cols, float yBottom, float xCenter, float zCenter)
 {
     std::vector<Vertex2> vertices;
     std::vector<std::vector<Vertex2>> rowsOfVertices;
@@ -502,8 +625,8 @@ std::vector<Vertex2> Application::verticesBall(float radius, int rows, int cols,
     float angleRow = 180.0f / rows;
     float rowStepY = (radius * 2) / rows;
     float y;
-    Vertex2 downPoint = { 0.0f, yBottom, 0.0f, 0.5f, 0.5f };
-    Vertex2 topPoint = { 0.0f, yBottom + radius * 2, 0.0f, 0.5f, 0.5f };
+    Vertex2 downPoint = { xCenter, yBottom, zCenter, 0.5f, 0.5f };
+    Vertex2 topPoint = { xCenter, yBottom + radius * 2, zCenter, 0.5f, 0.5f };
     std::vector<float> radiuses;
     //Generate radiuses
     for (int row = 1; row < rows; ++row)
@@ -514,7 +637,17 @@ std::vector<Vertex2> Application::verticesBall(float radius, int rows, int cols,
     for (int row = 1; row < rows; ++row)
     {
         y = yBottom + radius - radius * cos(row * angleRow * D2R);
-        rowsOfVertices.push_back(verticesCircle(radiuses[row - 1], cols + 1, 360.0f, y));
+        auto verts = verticesCircle(radiuses[row - 1], cols + 1, 360.0f, y);
+        //Move the vertices
+        if (xCenter != 0 || zCenter != 0)
+        {
+            for (int i = 0; i < verts.size(); ++i)
+            {
+                verts[i].x += xCenter;
+                verts[i].z += zCenter;
+            }
+        }
+        rowsOfVertices.push_back(verts);
         if (row == 1)
         {
             VerticesToTriangles(rowsOfVertices[0], downPoint, vertices, true);
@@ -525,7 +658,47 @@ std::vector<Vertex2> Application::verticesBall(float radius, int rows, int cols,
         }
     }
     VerticesToTriangles(rowsOfVertices[rows - 2], topPoint, vertices, false);
+    Vertex2 center = { xCenter, yBottom + radius, zCenter };
+    CalcNormalsToCenter(vertices, center, true, vertices.size());
     return vertices;
+}
+
+void Application::SetNormalForEachVertex(std::vector<Vertex2>& v, Petr_Math::Vector normal, int count)
+{
+    for (int i = v.size() - count; i < v.size(); ++i)
+    {
+        v[i].nx = normal[0];
+        v[i].ny = normal[1];
+        v[i].nz = normal[2];
+    }
+}
+
+void Application::CalcNormalsToCenter(std::vector<Vertex2>& v, Vertex2 center, bool opposite, int count)
+{
+    Petr_Math::Vector centerVec(center.x, center.y, center.z);
+    if(opposite)
+    {
+        for (int i = v.size() - count; i < v.size(); ++i)
+        {
+            Petr_Math::Vector vPosVec(v[i].x, v[i].y, v[i].z);
+            auto normal = (vPosVec - centerVec).normalize();
+            v[i].nx = normal[0];
+            v[i].ny = normal[1];
+            v[i].nz = normal[2];
+        }
+    }
+    else
+    {
+        for (int i = v.size() - count; i < v.size(); ++i)
+        {
+            Petr_Math::Vector vPosVec(v[i].x, v[i].y, v[i].z);
+            auto normal = (centerVec - vPosVec).normalize();
+            v[i].nx = normal[0];
+            v[i].ny = normal[1];
+            v[i].nz = normal[2];
+        }
+    }
+    
 }
 
 void Application::VerticesToTriangles(std::vector<Vertex2>& v1, std::vector<Vertex2>& v2, std::vector<Vertex2>& output, bool clockwise)

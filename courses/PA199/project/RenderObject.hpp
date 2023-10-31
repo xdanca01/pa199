@@ -4,7 +4,7 @@
 #include "glad/glad.h"
 #include <vector>
 
-struct Vertex2 { float x, y, z, u, v; };
+struct Vertex2 { float x, y, z, u, v, nx, ny, nz;};
 enum renderType
 {
     FAN,
@@ -40,18 +40,23 @@ public:
             }())
     {
         //x, y, z
-        glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 5);
+        glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 8);
         //u, v
-        glVertexArrayVertexBuffer(VAO, 1, VBO, sizeof(float) * 3, sizeof(float) * 5);
+        glVertexArrayVertexBuffer(VAO, 1, VBO, sizeof(float) * 3, sizeof(float) * 8);
+        //normal x, y, z
+        glVertexArrayVertexBuffer(VAO, 2, VBO, sizeof(float) * 5, sizeof(float) * 8);
         assert(glGetError() == 0U);
         glEnableVertexArrayAttrib(VAO, 0);
         glEnableVertexArrayAttrib(VAO, 1);
+        glEnableVertexArrayAttrib(VAO, 2);
         assert(glGetError() == 0U);
         glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
         glVertexArrayAttribFormat(VAO, 1, 2, GL_FLOAT, GL_FALSE, 0);
+        glVertexArrayAttribFormat(VAO, 2, 3, GL_FLOAT, GL_FALSE, 0);
         assert(glGetError() == 0U);
         glVertexArrayAttribBinding(VAO, 0, 0);
         glVertexArrayAttribBinding(VAO, 1, 1);
+        glVertexArrayAttribBinding(VAO, 2, 2);
         assert(glGetError() == 0U);
     };
 

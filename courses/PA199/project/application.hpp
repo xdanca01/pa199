@@ -89,7 +89,10 @@ class Application : public IApplication {
 
     std::vector<Vertex2> verticesGround();
     std::vector<Vertex2> VerticesPaddle(int points, float verticesTopR, float yBottom, float height, float angle);
-    std::vector<Vertex2> verticesBall(float radius, int rows, int cols, float yBottom);
+    std::vector<Vertex2> VerticesBrick(int points, float verticesTopR, float yBottom, float height, float angle, float offset);
+    std::vector<Vertex2> verticesBall(float radius, int rows, int cols, float yBottom, float xCenter, float zCenter);
+    void CalcNormalsToCenter(std::vector<Vertex2>& v, Vertex2 center, bool opposite,int count);
+    void SetNormalForEachVertex(std::vector<Vertex2>& v, Petr_Math::Vector normal, int count);
 
     void VerticesToTriangles(std::vector<Vertex2>& v1, std::vector<Vertex2>& v2, std::vector<Vertex2>& output, bool clockwise);
     void VerticesToTriangles(std::vector<Vertex2>& v1, Vertex2& v2, std::vector<Vertex2>& output, bool clockwise);
