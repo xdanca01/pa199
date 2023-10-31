@@ -60,8 +60,17 @@ public:
         assert(glGetError() == 0U);
     };
 
-    void Render()
+    void Render(GLuint shader_program, Petr_Math::Vector lightColor, Petr_Math::Vector lightPosition, Petr_Math::Vector cameraPosition)
     {
+        int lightColorLoc = glGetUniformLocation(shader_program, "lightColor");
+        glUniform3fv(lightColorLoc, 1, lightColor.getData());
+
+        int lightPosLoc = glGetUniformLocation(shader_program, "lightPosition");
+        glUniform3fv(lightPosLoc, 1, lightPosition.getData());
+
+        int cameraPosLoc = glGetUniformLocation(shader_program, "cameraPosition");
+        glUniform3fv(cameraPosLoc, 1, cameraPosition.getData());
+
         glBindVertexArray(VAO);
         assert(glGetError() == 0U);
         if (type == INDICES)

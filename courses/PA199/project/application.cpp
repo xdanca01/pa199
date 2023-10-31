@@ -166,7 +166,9 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
                 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
                 assert(glGetError() == 0U);
                 return vertex_buffer;
-            }())
+            }()),
+            lightColor(1.0f, 1.0f, 1.0f),
+            lightPosition(0.0, 1.0f, 0.0f)
 {
     prepare_camera();
     createObjects();
@@ -218,6 +220,10 @@ Petr_Math::Matrix Application::perspective(double fov, double aspect, double nea
     return Petr_Math::Matrix(4, 4, dataForMat);
 }
 
+void Application::prepare_lights()
+{
+}
+
 void Application::prepare_camera()
 {
     camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 1.0f);
@@ -232,7 +238,7 @@ void Application::render() {
     glClearColor(red, green, blue, 1.0f);
     
     // Clears the window using the above color.
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if (DEBUG)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -363,6 +369,7 @@ void Application::drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_
 void Application::drawObjects()
 {
     glUseProgram(shader_program);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     assert(glGetError() == 0U);
     int modelLoc = glGetUniformLocation(shader_program, "model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());
@@ -376,7 +383,7 @@ void Application::drawObjects()
     assert(glGetError() == 0U);
     for (auto obj : objects)
     {
-        obj.Render();
+        obj.Render(shader_program, lightColor, lightPosition, camera.eye_position);
     }
     //objects[1].Render();
 }
@@ -388,26 +395,35 @@ void Application::createObjects()
     RenderObject ground(vertices, FAN);
     objects.push_back(ground);
     //Create paddle 1 
-    vertices = VerticesPaddle(15, 0.1f, 0.0f, 0.05f, 30.0f);
+    vertices = VerticesPaddle(15, 0.1f, 0.0f, 0.025f, 30.0f);
     RenderObject paddle1(vertices, INDICES);
     objects.push_back(paddle1);
     //Create paddle 2
-    vertices = VerticesPaddle(15, -0.1f, 0.0f, 0.05f, 30.0f);
+    vertices = VerticesPaddle(15, -0.1f, 0.0f, 0.025f, 30.0f);
     RenderObject paddle2(vertices, INDICES);
     objects.push_back(paddle2);
 
-    vertices = verticesBall(0.01f, 32, 64, 0.0f, 0.0f, 0.08f);
+    vertices = verticesBall(0.01f, 16, 32, 0.0f, 0.0f, 0.08f);
     RenderObject ball(vertices, INDICES);
     objects.push_back(ball);
 
-    int numOfBricks = 5;
+    int numOfBricks = 6;
     float step = 360.0f / (float)numOfBricks;
-    for(int i = 0; i < numOfBricks; ++i)
+    for (int i = 0; i < numOfBricks / 2; ++i)
     {
-        vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, step, i * step);
+        vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, step, i * step + 240.0f);
         RenderObject brick(vertices, INDICES);
         objects.push_back(brick);
     }
+    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, step, step + 120.0f);
+    RenderObject brick(vertices, INDICES);
+    objects.push_back(brick);
+    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, step, step + 60.0f);
+    brick = RenderObject(vertices, INDICES);
+    objects.push_back(brick);
+    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, step, step + 0.0f);
+    brick = RenderObject(vertices, INDICES);
+    objects.push_back(brick);
 ;}
 
 std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float angle, float y, float angleOffset)
@@ -650,14 +666,14 @@ std::vector<Vertex2> Application::verticesBall(float radius, int rows, int cols,
         rowsOfVertices.push_back(verts);
         if (row == 1)
         {
-            VerticesToTriangles(rowsOfVertices[0], downPoint, vertices, true);
+            VerticesToTriangles(rowsOfVertices[0], downPoint, vertices, false);
         }
         else
         {
-            VerticesToTriangles(rowsOfVertices[row - 2], rowsOfVertices[row - 1], vertices, false);
+            VerticesToTriangles(rowsOfVertices[row - 2], rowsOfVertices[row - 1], vertices, true);
         }
     }
-    VerticesToTriangles(rowsOfVertices[rows - 2], topPoint, vertices, false);
+    VerticesToTriangles(rowsOfVertices[rows - 2], topPoint, vertices, true);
     Vertex2 center = { xCenter, yBottom + radius, zCenter };
     CalcNormalsToCenter(vertices, center, true, vertices.size());
     return vertices;

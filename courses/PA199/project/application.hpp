@@ -39,7 +39,11 @@ class Application : public IApplication {
     GLuint Camerabuffer;
     GLuint VBO;
     GLuint VAO;
+    float ambientStrength = 0.1;
+    Petr_Math::Vector lightColor;
+    Petr_Math::Vector lightPosition;
     std::vector<RenderObject> objects;
+
 
     // ----------------------------------------------------------------------------
     // Constructors & Destructors
@@ -84,6 +88,8 @@ class Application : public IApplication {
     void drawObjects();
 
     void createObjects();
+
+    void prepare_lights();
 
     std::vector<Vertex2> verticesCircle(float radius, int vertices, float angle, float y, float angleOffset = 0.0f);
 
