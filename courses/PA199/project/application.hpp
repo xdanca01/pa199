@@ -36,6 +36,7 @@ class Application : public IApplication {
     GLuint vertex_buffer;
     GLuint index_buffer;
     GLuint texture;
+    GLuint Groundtexture;
     GLuint Camerabuffer;
     GLuint VBO;
     GLuint VAO;

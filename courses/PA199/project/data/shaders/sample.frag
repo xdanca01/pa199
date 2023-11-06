@@ -10,14 +10,21 @@ in vec3 viewPos;
 
 layout(location = 0) out vec4 final_color;
 uniform sampler2D sample_texture;
+uniform bool useTexture;
 
 void main()
 {
     vec3 normal = normalize(normal_vec);
 
     //Show normals
-    //vec3 color = vec3(normal.x, normal.y, normal.z);
-    vec3 color = vec3(1.0, 1.0, 1.0);
+    vec3 color = vec3(normal.x, normal.y, normal.z);
+
+    if(useTexture)
+    {
+        color = texture(sample_texture, tex_coord).xyz;
+    }
+    
+    //vec3 color = vec3(1.0, 1.0, 1.0);
 
     vec3 lightDir = normalize(lightPos - FragPos);
 

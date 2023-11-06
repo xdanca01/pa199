@@ -126,6 +126,7 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
             return index_buffer;
             }())
     , texture(load_texture(lecture_folder_path / "data" / "textures" / "you_win.png")),
+      Groundtexture(load_texture(lecture_folder_path / "data" / "textures" / "ground.png")),
 
     shader_program_line([](GLuint const  vertex_shader, GLuint const  fragment_shader) -> GLuint {
                 GLuint const  shader_program = glCreateProgram();
@@ -191,6 +192,7 @@ Application::~Application()
     glDeleteShader(vertex_shader_line);
     glDeleteVertexArrays(1U, &vertex_arrays);
     glDeleteTextures(1, &texture);
+    glDeleteTextures(1, &Groundtexture);
     glDeleteProgram(shader_program);
     glDeleteShader(fragment_shader);
     glDeleteShader(vertex_shader);
@@ -381,9 +383,18 @@ void Application::drawObjects()
     int projectionLoc = glGetUniformLocation(shader_program, "projection");
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection_matrix.getData());
     assert(glGetError() == 0U);
+    bool ground = true;
     for (auto obj : objects)
     {
-        obj.Render(shader_program, lightColor, lightPosition, camera.eye_position);
+        if (ground)
+        {
+            ground = false;
+            obj.Render(shader_program, lightColor, lightPosition, camera.eye_position, Groundtexture);
+        }
+        else
+        {
+            obj.Render(shader_program, lightColor, lightPosition, camera.eye_position);
+        }
     }
     //objects[1].Render();
 }

@@ -3,7 +3,7 @@
 add_library(PetrMath
     "PetrMath.hpp"
     "PetrMath.cpp"
-     "Vector.cpp" "Vector.hpp" "Matrix.cpp" "Matrix.hpp" "Quaternion.cpp" "Quaternion.hpp" "AxisAngle.cpp" "AxisAngle.hpp")
+     "Vector.cpp" "Vector.hpp" "Matrix.cpp" "Matrix.hpp" "Quaternion.cpp" "Quaternion.hpp" "AxisAngle.cpp" "AxisAngle.hpp" "PolarCoordinates.cpp" "PolarCoordinates.hpp")
 
 # (optional) Search and ling with 3rd party libraries
 find_package(glfw3 CONFIG REQUIRED)
