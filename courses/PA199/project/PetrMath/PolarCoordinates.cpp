@@ -12,21 +12,23 @@ namespace Petr_Math {
 	{
 		this->radius = radius;
 		this->angle = angleInDegrees;
+		Normalize();
 	}
 
 	PolarCoordinates::PolarCoordinates(Petr_Math::Vector CartesianCords)
 	{
-		//r = sqrt(x^2 + z^2)
-		radius = sqrt(CartesianCords[0] * CartesianCords[0] + CartesianCords[2] * CartesianCords[2]);
-		//z, x
-		angle = atan2(CartesianCords[2], CartesianCords[0]);
+		//r = sqrt(x^2 + y^2)
+		radius = sqrt(CartesianCords[0] * CartesianCords[0] + CartesianCords[1] * CartesianCords[1]);
+		//y, x
+		angle = atan2(CartesianCords[1], CartesianCords[0]);
+		Normalize();
 	}
 
 	Petr_Math::Vector PolarCoordinates::toCartesian()
 	{
 		Normalize();
 		float x = radius * cos(angle);
-		float z = radius * sin(angle);
-		return Petr_Math::Vector(x, 0.0f, z);
+		float y = radius * sin(angle);
+		return Petr_Math::Vector(x, y, 0.0f);
 	}
 }

@@ -1,0 +1,119 @@
+#pragma once
+
+#include "PetrMath/Vector.hpp"
+#include "PetrMath/PolarCoordinates.hpp"
+#include "glad/glad.h"
+#include <vector>
+
+struct Vertex2 { float x, y, z, u, v, nx, ny, nz;};
+
+class Physics {
+public:
+    Petr_Math::Vector positionBall;
+    float radiusBall;
+    float radiusBricks;
+    float widthBricks;
+    float radiusPaddle;
+    float widthPaddle;
+    float radiusGround;
+    std::vector<Petr_Math::PolarCoordinates> positionsP;
+    std::vector<Petr_Math::PolarCoordinates> positionsB;
+    Physics(Petr_Math::Vector Pb, float Rb, std::vector<Petr_Math::PolarCoordinates> PosPaddles, float Wp, float Rp,
+        std::vector<Petr_Math::PolarCoordinates> PosBricks, float Wb, float Rbricks, float Rg) : positionBall(Pb), radiusBall(Rb),
+        radiusBricks(Rbricks), widthBricks(Wb), radiusPaddle(Rp), widthPaddle(Wp), radiusGround(Rg), positionsB(PosBricks),
+        positionsP(PosPaddles)
+    {
+        
+    }
+
+    void CheckCollision()
+    {
+        float distanceFromCenter = sqrt(positionBall[0] * positionBall[0] + positionBall[1] * positionBall[1]);
+        //GameOver
+        if (distanceFromCenter - positionBall[2] > radiusGround)
+        {
+            //TODO GAME OVER
+        }
+        //Possible collision with paddle
+        else if (distanceFromCenter + positionBall[2] >= radiusPaddle - widthPaddle &&
+                 distanceFromCenter - positionBall[2] <= radiusPaddle + widthPaddle)
+        {
+            //TODO check collision with paddles
+        }
+        //Possible collision with bricks
+        else if (distanceFromCenter + positionBall[2] >= radiusBricks - widthBricks &&
+                 distanceFromCenter - positionBall[2] <= radiusBricks + widthBricks)
+        {
+            //TODO check collision with bricks
+        }
+    }
+
+    float minDifference(float first, float second)
+    {
+        return abs(first - second);
+    }
+
+    bool onLeft(float O, float Op)
+    {
+        if (O > Op) return true;
+        return false;
+    }
+
+    Petr_Math::Vector closestPointOnLine(Petr_Math::Vector START, Petr_Math::Vector END, Petr_Math::Vector POINT)
+    {
+        float t = (POINT - START).dot(END - START) / (END - START).dot(END - START);
+        if (t > 1.0f)
+        {
+            t = 1.0f;
+        }
+        else if (t < 0.0f)
+        {
+            t = 0.0f;
+        }
+        return START + t * (END - START);
+    }
+
+    Petr_Math::Vector paddlePhase1(float Rp)
+    {
+        float lengthP = positionBall.magnitude();
+        auto n = positionBall / lengthP;
+        return lengthP < Rp ? -n : n;
+    }
+
+    Petr_Math::Vector paddlePhase2(float radiusBall, float angleBall, float Rp, float Op, float Wp, float angleWidthPaddle)
+    {
+        int sign = onLeft ? 1 : -1;
+        auto A = Petr_Math::PolarCoordinates(Rp - Wp, Op + sign * angleWidthPaddle).toCartesian();
+        auto B = Petr_Math::PolarCoordinates(Rp + Wp, Op + sign * angleWidthPaddle).toCartesian();
+        Petr_Math::Vector collisionPoint = closestPointOnLine(A, B, positionBall);
+        auto tmp = positionBall - collisionPoint;
+        return tmp.magnitude() > 0 && tmp.magnitude() < radiusBall ? tmp / tmp.magnitude() : Petr_Math::Vector(3, 0.0f);
+    }
+
+    Petr_Math::Vector paddlePhase(std::vector<Petr_Math::PolarCoordinates> positions, float widthPaddle, float angleWidthPaddle)
+    {
+        Petr_Math::PolarCoordinates ball(positionBall);
+        float Rp = positions[0].radius;
+        float Op = positions[0].angle;
+        for (int i = 1; i < positions.size(); ++i)
+        {
+            Opp = positions[i].angle;
+            Rpp = positions[i].radius;
+            if (minDifference(ball.angle, Opp) < minDifference(ball.angle, Op))
+            {
+                Rp = Rpp;
+                Op = Opp;
+            }
+        }
+        //Case 1
+        if (minDifference(ball.angle, Op) <= angleWidthPaddle)
+        {
+            return paddlePhase1(Rp);
+        }
+        //Case 2
+        else
+        {
+            return paddlePhase2(radiusBall, ball.angle, Rp, Op, widthPaddle, angleWidthPaddle);
+        }
+    }
+};

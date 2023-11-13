@@ -12,6 +12,7 @@
 #include "RenderObject.hpp"
 #include "PetrMath/AxisAngle.hpp"
 #include "PetrMath/Quaternion.hpp"
+#include "Physics.hpp"
 
 struct Vertex { float x, y, z, u, v; };
 
@@ -40,6 +41,7 @@ class Application : public IApplication {
     GLuint Camerabuffer;
     GLuint VBO;
     GLuint VAO;
+    Physics gamePhysics;
     float ambientStrength = 0.1;
     Petr_Math::Vector lightColor;
     Petr_Math::Vector lightPosition;
@@ -91,6 +93,8 @@ class Application : public IApplication {
     void createObjects();
 
     void prepare_lights();
+
+    void prepare_physics();
 
     std::vector<Vertex2> verticesCircle(float radius, int vertices, float angle, float y, float angleOffset = 0.0f);
 

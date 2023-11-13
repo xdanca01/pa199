@@ -12,6 +12,7 @@
 #include <iostream>
 
 #define DEBUG false
+#define ballRADIUS 0.1f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -171,6 +172,7 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
             lightColor(1.0f, 1.0f, 1.0f),
             lightPosition(0.0, 1.0f, 0.0f)
 {
+    prepare_physics();
     prepare_camera();
     createObjects();
     glViewport(0, 0, width, height);
@@ -224,6 +226,11 @@ Petr_Math::Matrix Application::perspective(double fov, double aspect, double nea
 
 void Application::prepare_lights()
 {
+}
+
+void Application::prepare_physics()
+{
+    gamePhysics = Physics();
 }
 
 void Application::prepare_camera()
@@ -485,7 +492,7 @@ std::vector<Vertex2> Application::verticesGround()
     std::vector<Vertex2> vertices;
     Vertex2 middle = { 0.0f, 0.0f, 0.0f, 0.5f, 0.5f };
     vertices.push_back(middle);
-    auto anotherVerts = verticesCircle(0.1f, 150, 360, 0.0f);
+    auto anotherVerts = verticesCircle(ballRADIUS, 150, 360, 0.0f);
     vertices.insert(vertices.end(), anotherVerts.rbegin(), anotherVerts.rend());
     Petr_Math::Vector normalUp(0.0f, 1.0f, 0.0f);
     SetNormalForEachVertex(vertices, normalUp, vertices.size());
