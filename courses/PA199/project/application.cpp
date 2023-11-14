@@ -15,6 +15,10 @@
 #define ballRADIUS 0.1f
 #define ballX 0.0f
 #define ballZ 0.08f
+#define radiusPaddle 0.095f
+#define widthPaddle 0.01f
+#define anglePaddle 30.0f
+#define brickWidth 0.005f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -416,15 +420,15 @@ void Application::createObjects()
     RenderObject ground(vertices, FAN);
     objects.push_back(ground);
     //Create paddle 1 
-    vertices = VerticesPaddle(15, 0.095f, 0.0f, 0.025f, 0.01f, 30.0f, 0.0f);
+    vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.015f, widthPaddle, anglePaddle, 0.0f);
     RenderObject paddle1(vertices, INDICES);
     objects.push_back(paddle1);
     //Create paddle 2
-    vertices = VerticesPaddle(15, 0.095f, 0.0f, 0.025f, 0.01f, 30.0f, 120.0f);
+    vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.015f, widthPaddle, anglePaddle, 120.0f);
     RenderObject paddle2(vertices, INDICES);
     objects.push_back(paddle2);
     //Create paddle 3
-    vertices = VerticesPaddle(15, 0.095f, 0.0f, 0.025f, 0.01f, 30.0f, 240.0f);
+    vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.015f, widthPaddle, anglePaddle, 240.0f);
     RenderObject paddle3(vertices, INDICES);
     objects.push_back(paddle3);
 
@@ -436,17 +440,17 @@ void Application::createObjects()
     float step = 360.0f / (float)numOfBricks;
     for (int i = 0; i < numOfBricks / 2; ++i)
     {
-        vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, step, i * step + 240.0f);
+        vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, i * step + 240.0f);
         RenderObject brick(vertices, INDICES);
         objects.push_back(brick);
     }
-    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, step, step + 120.0f);
+    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, step + 120.0f);
     RenderObject brick(vertices, INDICES);
     objects.push_back(brick);
-    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, step, step + 60.0f);
+    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, step + 60.0f);
     brick = RenderObject(vertices, INDICES);
     objects.push_back(brick);
-    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, step, step + 0.0f);
+    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, step + 0.0f);
     brick = RenderObject(vertices, INDICES);
     objects.push_back(brick);
 ;}
@@ -505,12 +509,11 @@ std::vector<Vertex2> Application::verticesGround()
     SetNormalForEachVertex(vertices, normalUp, vertices.size());
     return vertices;
 }
-std::vector<Vertex2> Application::VerticesBrick(int points, float verticesTopR, float yBottom, float height, float angle, float offset)
+std::vector<Vertex2> Application::VerticesBrick(int points, float verticesTopR, float yBottom, float height, float width, float angle, float offset)
 {
     std::vector<Vertex2> vertices;
     std::vector<Vertex2> verticesTop;
     std::vector<Vertex2> verticesBottom;
-    float width =  0.01f;
     auto verticesTop1 = verticesCircle(verticesTopR - width, points, angle, yBottom + height, offset);
     auto verticesTop2 = verticesCircle(verticesTopR, points, angle, yBottom + height, offset);
     auto verticesBottom1 = verticesCircle(verticesTopR - width, points, angle, yBottom, offset);

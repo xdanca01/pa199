@@ -100,7 +100,7 @@ class Application : public IApplication {
 
     std::vector<Vertex2> verticesGround();
     std::vector<Vertex2> VerticesPaddle(int points, float R, float yBottom, float height, float width, float angle, float angleOffset);
-    std::vector<Vertex2> VerticesBrick(int points, float verticesTopR, float yBottom, float height, float angle, float offset);
+    std::vector<Vertex2> VerticesBrick(int points, float verticesTopR, float yBottom, float height, float width, float angle, float offset);
     std::vector<Vertex2> verticesBall(float radius, int rows, int cols, float yBottom, float xCenter, float zCenter);
     void CalcNormalsToCenter(std::vector<Vertex2>& v, Vertex2 center, bool opposite,int count);
     void SetNormalForEachVertex(std::vector<Vertex2>& v, Petr_Math::Vector normal, int count);
