@@ -12,13 +12,16 @@
 #include <iostream>
 
 #define DEBUG false
-#define ballRADIUS 0.1f
+#define ballRADIUS 0.005f
 #define ballX 0.0f
 #define ballZ 0.08f
 #define radiusPaddle 0.095f
 #define widthPaddle 0.01f
 #define anglePaddle 30.0f
 #define brickWidth 0.005f
+#define numOfBricks 6
+#define radiusBrick 0.02f
+#define radiusGround 0.1f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -237,7 +240,23 @@ void Application::prepare_lights()
 void Application::prepare_physics()
 {
     auto positionBall = Petr_Math::Vector(ballX, ballZ, ballRADIUS);
-    //gamePhysics = Physics(positionBall, );
+    Petr_Math::PolarCoordinates paddle1(radiusPaddle, anglePaddle / 2.0f);
+    Petr_Math::PolarCoordinates paddle2(radiusPaddle, 120.0f + anglePaddle / 2.0f);
+    Petr_Math::PolarCoordinates paddle3(radiusPaddle, 240.0f + anglePaddle / 2.0f);
+    std::vector<Petr_Math::PolarCoordinates> paddles, bricks;
+    paddles.push_back(paddle1);
+    paddles.push_back(paddle2);
+    paddles.push_back(paddle3);
+    float angleWidthBrick = 360.0f / float(numOfBricks);
+    for (int i = 0; i < numOfBricks; ++i)
+    {
+        Petr_Math::PolarCoordinates brick(radiusBrick, angleWidthBrick * i + angleWidthBrick / 2.0f);
+        bricks.push_back(brick);
+    }
+    
+
+    gamePhysics = Physics(positionBall, paddles, widthPaddle, anglePaddle, bricks, brickWidth, angleWidthBrick, radiusGround);
+    gamePhysics.CheckCollision();
 }
 
 void Application::prepare_camera()
@@ -436,11 +455,10 @@ void Application::createObjects()
     RenderObject ball(vertices, INDICES);
     objects.push_back(ball);
 
-    int numOfBricks = 6;
     float step = 360.0f / (float)numOfBricks;
     for (int i = 0; i < numOfBricks / 2; ++i)
     {
-        vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, i * step + 240.0f);
+        vertices = VerticesBrick(15, radiusBrick, 0.0f, 0.01, brickWidth, step, i * step + 240.0f);
         RenderObject brick(vertices, INDICES);
         objects.push_back(brick);
     }
@@ -503,21 +521,21 @@ std::vector<Vertex2> Application::verticesGround()
     std::vector<Vertex2> vertices;
     Vertex2 middle = { 0.0f, 0.0f, 0.0f, 0.5f, 0.5f };
     vertices.push_back(middle);
-    auto anotherVerts = verticesCircle(ballRADIUS, 150, 360, 0.0f);
+    auto anotherVerts = verticesCircle(radiusGround, 150, 360, 0.0f);
     vertices.insert(vertices.end(), anotherVerts.rbegin(), anotherVerts.rend());
     Petr_Math::Vector normalUp(0.0f, 1.0f, 0.0f);
     SetNormalForEachVertex(vertices, normalUp, vertices.size());
     return vertices;
 }
-std::vector<Vertex2> Application::VerticesBrick(int points, float verticesTopR, float yBottom, float height, float width, float angle, float offset)
+std::vector<Vertex2> Application::VerticesBrick(int points, float R, float yBottom, float height, float width, float angle, float offset)
 {
     std::vector<Vertex2> vertices;
     std::vector<Vertex2> verticesTop;
     std::vector<Vertex2> verticesBottom;
-    auto verticesTop1 = verticesCircle(verticesTopR - width, points, angle, yBottom + height, offset);
-    auto verticesTop2 = verticesCircle(verticesTopR, points, angle, yBottom + height, offset);
-    auto verticesBottom1 = verticesCircle(verticesTopR - width, points, angle, yBottom, offset);
-    auto verticesBottom2 = verticesCircle(verticesTopR, points, angle, yBottom, offset);
+    auto verticesTop1 = verticesCircle(R - width/2, points, angle, yBottom + height, offset);
+    auto verticesTop2 = verticesCircle(R + width / 2, points, angle, yBottom + height, offset);
+    auto verticesBottom1 = verticesCircle(R - width / 2, points, angle, yBottom, offset);
+    auto verticesBottom2 = verticesCircle(R + width / 2, points, angle, yBottom, offset);
 
     Petr_Math::Vector normalUp(0.0f, 1.0f, 0.0f);
     Petr_Math::Vector normalDown(0.0f, -1.0f, 0.0f);

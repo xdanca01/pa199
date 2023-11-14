@@ -8,42 +8,44 @@
 class Physics {
 public:
     Petr_Math::Vector positionBall;
-    float radiusBricks;
+    float angleWidthBricks;
     float widthBricks;
-    float radiusPaddle;
+    float angleWidthPaddle;
     float widthPaddle;
     float radiusGround;
     std::vector<Petr_Math::PolarCoordinates> positionsP;
     std::vector<Petr_Math::PolarCoordinates> positionsB;
     Physics() : positionBall(0), positionsP(), positionsB() {};
-    Physics(Petr_Math::Vector Pb, std::vector<Petr_Math::PolarCoordinates> PosPaddles, float Wp, float Rp,
-        std::vector<Petr_Math::PolarCoordinates> PosBricks, float Wb, float Rbricks, float Rg) : positionBall(Pb),
-        radiusBricks(Rbricks), widthBricks(Wb), radiusPaddle(Rp), widthPaddle(Wp), radiusGround(Rg), positionsB(PosBricks),
+    Physics(Petr_Math::Vector Pb, std::vector<Petr_Math::PolarCoordinates> PosPaddles, float Wp, float PhiP,
+        std::vector<Petr_Math::PolarCoordinates> PosBricks, float Wb, float PhiB, float Rg) : positionBall(Pb),
+        angleWidthBricks(PhiB), widthBricks(Wb), angleWidthPaddle(PhiP), widthPaddle(Wp), radiusGround(Rg), positionsB(PosBricks),
         positionsP(PosPaddles)
     {
         
     }
 
-    void CheckCollision()
+    Petr_Math::Vector CheckCollision()
     {
         float distanceFromCenter = sqrt(positionBall[0] * positionBall[0] + positionBall[1] * positionBall[1]);
+        Petr_Math::Vector result(3, 0.0f);
         //GameOver
         if (distanceFromCenter - positionBall[2] > radiusGround)
         {
             //TODO GAME OVER
         }
         //Possible collision with paddle
-        else if (distanceFromCenter + positionBall[2] >= radiusPaddle - widthPaddle &&
-                 distanceFromCenter - positionBall[2] <= radiusPaddle + widthPaddle)
+        else if (distanceFromCenter + positionBall[2] >= positionsP[0].radius - widthPaddle &&
+                 distanceFromCenter - positionBall[2] <= positionsP[0].radius + widthPaddle)
         {
-            //TODO check collision with paddles
+            result = paddlePhase(positionsP, widthPaddle, angleWidthPaddle);
         }
         //Possible collision with bricks
-        else if (distanceFromCenter + positionBall[2] >= radiusBricks - widthBricks &&
-                 distanceFromCenter - positionBall[2] <= radiusBricks + widthBricks)
+        else if (distanceFromCenter + positionBall[2] >= positionsB[0].radius - widthBricks &&
+                 distanceFromCenter - positionBall[2] <= positionsB[0].radius + widthBricks)
         {
             //TODO check collision with bricks
         }
+        return result;
     }
 
     float minDifference(float first, float second)
