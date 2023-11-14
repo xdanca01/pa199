@@ -5,12 +5,9 @@
 #include "glad/glad.h"
 #include <vector>
 
-struct Vertex2 { float x, y, z, u, v, nx, ny, nz;};
-
 class Physics {
 public:
     Petr_Math::Vector positionBall;
-    float radiusBall;
     float radiusBricks;
     float widthBricks;
     float radiusPaddle;
@@ -18,8 +15,9 @@ public:
     float radiusGround;
     std::vector<Petr_Math::PolarCoordinates> positionsP;
     std::vector<Petr_Math::PolarCoordinates> positionsB;
-    Physics(Petr_Math::Vector Pb, float Rb, std::vector<Petr_Math::PolarCoordinates> PosPaddles, float Wp, float Rp,
-        std::vector<Petr_Math::PolarCoordinates> PosBricks, float Wb, float Rbricks, float Rg) : positionBall(Pb), radiusBall(Rb),
+    Physics() : positionBall(0), positionsP(), positionsB() {};
+    Physics(Petr_Math::Vector Pb, std::vector<Petr_Math::PolarCoordinates> PosPaddles, float Wp, float Rp,
+        std::vector<Petr_Math::PolarCoordinates> PosBricks, float Wb, float Rbricks, float Rg) : positionBall(Pb),
         radiusBricks(Rbricks), widthBricks(Wb), radiusPaddle(Rp), widthPaddle(Wp), radiusGround(Rg), positionsB(PosBricks),
         positionsP(PosPaddles)
     {
@@ -70,19 +68,19 @@ public:
         {
             t = 0.0f;
         }
-        return START + t * (END - START);
+        return START + (END - START) * t;
     }
 
     Petr_Math::Vector paddlePhase1(float Rp)
     {
         float lengthP = positionBall.magnitude();
         auto n = positionBall / lengthP;
-        return lengthP < Rp ? -n : n;
+        return lengthP < Rp ? n.opposite() : n;
     }
 
     Petr_Math::Vector paddlePhase2(float radiusBall, float angleBall, float Rp, float Op, float Wp, float angleWidthPaddle)
     {
-        int sign = onLeft ? 1 : -1;
+        int sign = onLeft(angleBall, Op) ? 1 : -1;
         auto A = Petr_Math::PolarCoordinates(Rp - Wp, Op + sign * angleWidthPaddle).toCartesian();
         auto B = Petr_Math::PolarCoordinates(Rp + Wp, Op + sign * angleWidthPaddle).toCartesian();
         Petr_Math::Vector collisionPoint = closestPointOnLine(A, B, positionBall);
@@ -97,8 +95,8 @@ public:
         float Op = positions[0].angle;
         for (int i = 1; i < positions.size(); ++i)
         {
-            Opp = positions[i].angle;
-            Rpp = positions[i].radius;
+            auto Opp = positions[i].angle;
+            auto Rpp = positions[i].radius;
             if (minDifference(ball.angle, Opp) < minDifference(ball.angle, Op))
             {
                 Rp = Rpp;
@@ -113,7 +111,7 @@ public:
         //Case 2
         else
         {
-            return paddlePhase2(radiusBall, ball.angle, Rp, Op, widthPaddle, angleWidthPaddle);
+            return paddlePhase2(positionBall[2], ball.angle, Rp, Op, widthPaddle, angleWidthPaddle);
         }
     }
 };

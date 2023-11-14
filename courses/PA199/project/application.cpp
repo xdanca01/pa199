@@ -13,6 +13,8 @@
 
 #define DEBUG false
 #define ballRADIUS 0.1f
+#define ballX 0.0f
+#define ballZ 0.08f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -230,7 +232,8 @@ void Application::prepare_lights()
 
 void Application::prepare_physics()
 {
-    gamePhysics = Physics();
+    auto positionBall = Petr_Math::Vector(ballX, ballZ, ballRADIUS);
+    //gamePhysics = Physics(positionBall, );
 }
 
 void Application::prepare_camera()
@@ -413,15 +416,19 @@ void Application::createObjects()
     RenderObject ground(vertices, FAN);
     objects.push_back(ground);
     //Create paddle 1 
-    vertices = VerticesPaddle(15, 0.1f, 0.0f, 0.025f, 30.0f);
+    vertices = VerticesPaddle(15, 0.095f, 0.0f, 0.025f, 0.01f, 30.0f, 0.0f);
     RenderObject paddle1(vertices, INDICES);
     objects.push_back(paddle1);
     //Create paddle 2
-    vertices = VerticesPaddle(15, -0.1f, 0.0f, 0.025f, 30.0f);
+    vertices = VerticesPaddle(15, 0.095f, 0.0f, 0.025f, 0.01f, 30.0f, 120.0f);
     RenderObject paddle2(vertices, INDICES);
     objects.push_back(paddle2);
+    //Create paddle 3
+    vertices = VerticesPaddle(15, 0.095f, 0.0f, 0.025f, 0.01f, 30.0f, 240.0f);
+    RenderObject paddle3(vertices, INDICES);
+    objects.push_back(paddle3);
 
-    vertices = verticesBall(0.01f, 16, 32, 0.0f, 0.0f, 0.08f);
+    vertices = verticesBall(ballRADIUS, 16, 32, 0.0f, ballX, ballZ);
     RenderObject ball(vertices, INDICES);
     objects.push_back(ball);
 
@@ -574,16 +581,15 @@ std::vector<Vertex2> Application::VerticesBrick(int points, float verticesTopR, 
 }
 
 
-std::vector<Vertex2> Application::VerticesPaddle(int points, float verticesTopR, float yBottom, float height,float angle)
+std::vector<Vertex2> Application::VerticesPaddle(int points, float R, float yBottom, float height, float width, float angle, float angleOffset)
 {
     std::vector<Vertex2> vertices;
     std::vector<Vertex2> verticesTop;
     std::vector<Vertex2> verticesBottom;
-    float offset = verticesTopR > 0 ? 0.01f : -0.01f;
-    auto verticesTop1 = verticesCircle(verticesTopR - offset, points, angle, yBottom + height);
-    auto verticesTop2 = verticesCircle(verticesTopR, points, angle, yBottom + height);
-    auto verticesBottom1 = verticesCircle(verticesTopR - offset, points, angle, yBottom);
-    auto verticesBottom2 = verticesCircle(verticesTopR, points, angle, yBottom);
+    auto verticesTop1 = verticesCircle(R - width / 2, points, angle, yBottom + height, angleOffset);
+    auto verticesTop2 = verticesCircle(R + width / 2, points, angle, yBottom + height, angleOffset);
+    auto verticesBottom1 = verticesCircle(R - width / 2, points, angle, yBottom, angleOffset);
+    auto verticesBottom2 = verticesCircle(R + width / 2, points, angle, yBottom, angleOffset);
 
     //NORMAL is anticlockwise up!!!!
     //Counterclockwise is frontface
