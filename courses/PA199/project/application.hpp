@@ -42,6 +42,7 @@ class Application : public IApplication {
     GLuint Camerabuffer;
     GLuint VBO;
     GLuint VAO;
+    int rotatePaddles;
     Physics gamePhysics;
     float ambientStrength = 0.1;
     Petr_Math::Vector lightColor;
@@ -95,6 +96,10 @@ class Application : public IApplication {
     void prepare_lights();
 
     void prepare_physics();
+
+    void SetViewSide();
+
+    void SetViewTop();
 
     std::vector<Vertex2> verticesCircle(float radius, int vertices, float angle, float y, float angleOffset = 0.0f);
 

@@ -87,13 +87,22 @@ public:
     bool onLeft(float O, float Op)
     {
         if (O > Op) return false;
+        if (O < 180.0f && Op > 180.0f) return false;
         return true;
     }
 
     Petr_Math::Vector closestPointOnLine(Petr_Math::Vector START, Petr_Math::Vector END, Petr_Math::Vector POINT)
     {
-        float t = (POINT - START).dot(END - START) / (END - START).dot(END - START);
-        return START + (END - START) * t;
+        auto line = END - START;
+        auto dir = START - POINT;
+        auto dotVal = line.dot(dir);
+        float len = dir.magnitude();
+        dir = dir.normalize();
+        line = line.normalize();
+        //float t = ;
+        //t = std::clamp(t, 0.0f, 1.0f);
+        //return START + (line * t);
+        return START + line * len * dotVal;
     }
 
     Petr_Math::Vector paddlePhase1(float Rp)
@@ -109,11 +118,14 @@ public:
         int sign = onLeft(angleBall, Op) ? 1 : -1;
         //Clockwise
         auto A = Petr_Math::PolarCoordinates(Rp - Wp, Op - sign * angleWidthPaddle).toCartesian();
+        A = Petr_Math::Vector(A[0], 0.0f, A[1]);
         auto B = Petr_Math::PolarCoordinates(Rp + Wp, Op - sign * angleWidthPaddle).toCartesian();
+        B = Petr_Math::Vector(B[0], 0.0f, B[1]);
         auto Pb = Petr_Math::Vector(positionBall[0], 0.0f, positionBall[1]);
         Petr_Math::Vector collisionPoint = closestPointOnLine(A, B, Pb);
         auto tmp = Pb - collisionPoint;
-        return tmp.magnitude() > 0 && tmp.magnitude() <= radiusBall ? tmp / tmp.magnitude() : Petr_Math::Vector(3, 0.0f);
+        float distance = tmp.magnitude();
+        return distance > 0.0f && distance <= radiusBall ? tmp.normalize() : Petr_Math::Vector(3, 0.0f);
     }
 
     Petr_Math::Vector paddlePhase(std::vector<Petr_Math::PolarCoordinates> positions, float widthPaddle, float angleWidthPaddle)
@@ -143,13 +155,12 @@ public:
         }
     }
 
-    Petr_Math::Vector moveBall(float paddlesSpeed)
+    Petr_Math::Vector moveBall(float paddlesSpeed, int paddlesMove)
     {
         auto n = this->CheckCollision();
         Petr_Math::Vector Vp(n[2], 0.0f, -n[0]);
         //TODO check moving and set right speed based on rotation (+- angle)
-        Vp = Vp.normalize() * positionsP[0].radius *  paddlesSpeed;
-        //Vp = Petr_Math::Vector(3, 0.0f);
+        Vp = Vp.normalize() * positionsP[0].radius *  paddlesSpeed * paddlesMove;
         //n[3] is returned bool that says what type of collision happened
         if (n[3] < 0.5f)
         {

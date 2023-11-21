@@ -23,7 +23,7 @@
 #define radiusBrick 0.02f
 #define radiusGround 0.1f
 #define ballSpeed 0.0004f
-#define paddlesSpeed 2.0f
+#define paddlesSpeed 0.5f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -74,6 +74,7 @@ static GLuint load_texture(std::filesystem::path const& path)
 
 Application::Application(int initial_width, int initial_height, std::vector<std::string> arguments)
     : IApplication(initial_width, initial_height, arguments)
+    ,rotatePaddles(0)
     , model(4, 1.0f, true)
     , vertex_shader(load_shader(lecture_folder_path / "data" / "shaders" / "sample.vert", GL_VERTEX_SHADER))
     , fragment_shader(load_shader(lecture_folder_path / "data" / "shaders" / "sample.frag", GL_FRAGMENT_SHADER))
@@ -260,10 +261,21 @@ void Application::prepare_physics()
     gamePhysics = Physics(positionBall, paddles, widthPaddle / 2.0f, anglePaddle / 2.0f, bricks, brickWidth / 2.0f, angleWidthBrick / 2.0f, radiusGround, ballSpeed);
 }
 
-void Application::prepare_camera()
+void Application::SetViewTop()
+{
+    camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 0.0f);
+    camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 0.0f, -1.0f));
+}
+
+void Application::SetViewSide()
 {
     camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 1.0f);
     camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 1.0f, -1.0f));
+}
+
+void Application::prepare_camera()
+{
+    SetViewSide();
     camera.projection_matrix = perspective(90.0f, width / height, 0.1f, 10.0f).transpose();
 }
 
@@ -323,10 +335,9 @@ void Application::render() {
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     //assert(glGetError() == 0U);
     auto Vp = Petr_Math::Vector(0.0f, 0.0f, 0.0f) * ballSpeed;
-    //auto Vp = Petr_Math::Vector(-1.0f, 0.0f, 1.0f).normalize() * ballSpeed;
-    auto moveVector = gamePhysics.moveBall(paddlesSpeed);
+    RotatePaddles(paddlesSpeed * rotatePaddles);
+    auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles);
     Petr_Math::Matrix newModel(4, 1.0f, true);
-    //newModel.translate(moveVector);
     //Model matrix for ball
     newModel.translate(moveVector);
     objects[4].model = objects[4].model * newModel;
@@ -375,21 +386,27 @@ void Application::on_key_pressed(int key, int scancode, int action, int mods) {
             blue = 1;
             break;
         case GLFW_KEY_LEFT:
-            RotatePaddles(paddlesSpeed);
+            rotatePaddles = 1;
             break;
         case GLFW_KEY_RIGHT:
-            RotatePaddles(-paddlesSpeed);
+            rotatePaddles = -1;
+            break;
+        case GLFW_KEY_1:
+            SetViewSide();
+            break;
+        case GLFW_KEY_2:
+            SetViewTop();
             break;
         }
     }
-    else if (action == GLFW_REPEAT)
+    else if (action == GLFW_RELEASE)
     {
         switch (key) {
         case GLFW_KEY_LEFT:
-            RotatePaddles(paddlesSpeed);
+            rotatePaddles = 0;
             break;
         case GLFW_KEY_RIGHT:
-            RotatePaddles(-paddlesSpeed);
+            rotatePaddles = 0;
             break;
         }
     }
@@ -478,15 +495,15 @@ void Application::createObjects()
     RenderObject ground(vertices, FAN);
     objects.push_back(ground);
     //Create paddle 1 
-    vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.015f, widthPaddle, anglePaddle, 0.0f);
+    vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.01f, widthPaddle, anglePaddle, 0.0f);
     RenderObject paddle1(vertices, INDICES);
     objects.push_back(paddle1);
     //Create paddle 2
-    vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.015f, widthPaddle, anglePaddle, 120.0f);
+    vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.01f, widthPaddle, anglePaddle, 120.0f);
     RenderObject paddle2(vertices, INDICES);
     objects.push_back(paddle2);
     //Create paddle 3
-    vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.015f, widthPaddle, anglePaddle, 240.0f);
+    vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.01f, widthPaddle, anglePaddle, 240.0f);
     RenderObject paddle3(vertices, INDICES);
     objects.push_back(paddle3);
 
