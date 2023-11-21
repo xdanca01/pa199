@@ -58,6 +58,20 @@ namespace Petr_Math {
 			}
 		}
 	}
+	void Matrix::translate(Vector moveVec)
+	{
+		at(0, 3) += moveVec[0];
+		at(1, 3) += moveVec[1];
+		at(2, 3) += moveVec[2];
+	}
+
+
+	void Matrix::translate(float x, float y, float z)
+	{
+		at(0, 3) += x;
+		at(1, 3) += y;
+		at(2, 3) += z;
+	}
 
 	Matrix& Matrix::operator =(Matrix const& mat)
 	{

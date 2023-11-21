@@ -17,6 +17,7 @@
 struct Vertex { float x, y, z, u, v; };
 
 #define D2R M_PI/180.0f
+#define R2D 180.0f/M_PI
 
 class Application : public IApplication {
     // ----------------------------------------------------------------------------

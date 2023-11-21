@@ -31,6 +31,8 @@ namespace Petr_Math {
 		Matrix(int w, int h, float* nums);
 		//w*h identity matrix
 		Matrix(int wh, float num, bool identity);
+		void translate(float x, float y, float z);
+		void translate(Vector moveVec);
 		Vector& operator=(Vector const& vec);
 		float at(int const w, int const h) const;
 		float& at(int const w, int const h);

@@ -13,15 +13,16 @@
 
 #define DEBUG false
 #define ballRADIUS 0.005f
-#define ballX 0.0f
-#define ballZ 0.08f
+#define ballX 0.05f
+#define ballZ 0.00f
 #define radiusPaddle 0.095f
-#define widthPaddle 0.01f
+#define widthPaddle 0.003f
 #define anglePaddle 30.0f
 #define brickWidth 0.005f
 #define numOfBricks 6
 #define radiusBrick 0.02f
 #define radiusGround 0.1f
+#define ballSpeed 0.0004f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -240,9 +241,9 @@ void Application::prepare_lights()
 void Application::prepare_physics()
 {
     auto positionBall = Petr_Math::Vector(ballX, ballZ, ballRADIUS);
-    Petr_Math::PolarCoordinates paddle1(radiusPaddle, anglePaddle / 2.0f);
-    Petr_Math::PolarCoordinates paddle2(radiusPaddle, 120.0f + anglePaddle / 2.0f);
-    Petr_Math::PolarCoordinates paddle3(radiusPaddle, 240.0f + anglePaddle / 2.0f);
+    Petr_Math::PolarCoordinates paddle1(radiusPaddle, 0.0f);
+    Petr_Math::PolarCoordinates paddle2(radiusPaddle, 120.0f);
+    Petr_Math::PolarCoordinates paddle3(radiusPaddle, 240.0f);
     std::vector<Petr_Math::PolarCoordinates> paddles, bricks;
     paddles.push_back(paddle1);
     paddles.push_back(paddle2);
@@ -255,8 +256,7 @@ void Application::prepare_physics()
     }
     
 
-    gamePhysics = Physics(positionBall, paddles, widthPaddle, anglePaddle, bricks, brickWidth, angleWidthBrick, radiusGround);
-    gamePhysics.CheckCollision();
+    gamePhysics = Physics(positionBall, paddles, widthPaddle / 2.0f, anglePaddle / 2.0f, bricks, brickWidth / 2.0f, angleWidthBrick / 2.0f, radiusGround, ballSpeed);
 }
 
 void Application::prepare_camera()
@@ -321,7 +321,13 @@ void Application::render() {
 
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     //assert(glGetError() == 0U);
-    
+    auto Vp = Petr_Math::Vector(0.0f, 0.0f, 0.0f) * ballSpeed;
+    //auto Vp = Petr_Math::Vector(-1.0f, 0.0f, 1.0f).normalize() * ballSpeed;
+    auto moveVector = gamePhysics.moveBall(Vp);
+    Petr_Math::Matrix newModel(4, 1.0f, true);
+    //newModel.translate(moveVector);
+    newModel.translate(moveVector);
+    objects[4].model = objects[4].model * newModel;
 }
 
 void Application::render_ui() {}
@@ -406,9 +412,9 @@ void Application::drawObjects()
     glUseProgram(shader_program);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     assert(glGetError() == 0U);
-    int modelLoc = glGetUniformLocation(shader_program, "model");
+    /*int modelLoc = glGetUniformLocation(shader_program, "model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());
-    assert(glGetError() == 0U);
+    assert(glGetError() == 0U);*/
     int viewLoc = glGetUniformLocation(shader_program, "view");
     auto viewMatrix = camera.get_view_matrix().transpose();
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, viewMatrix.getData());
@@ -607,10 +613,10 @@ std::vector<Vertex2> Application::VerticesPaddle(int points, float R, float yBot
     std::vector<Vertex2> vertices;
     std::vector<Vertex2> verticesTop;
     std::vector<Vertex2> verticesBottom;
-    auto verticesTop1 = verticesCircle(R - width / 2, points, angle, yBottom + height, angleOffset);
-    auto verticesTop2 = verticesCircle(R + width / 2, points, angle, yBottom + height, angleOffset);
-    auto verticesBottom1 = verticesCircle(R - width / 2, points, angle, yBottom, angleOffset);
-    auto verticesBottom2 = verticesCircle(R + width / 2, points, angle, yBottom, angleOffset);
+    auto verticesTop1 = verticesCircle(R - width / 2, points, angle, yBottom + height, angleOffset - angle/2);
+    auto verticesTop2 = verticesCircle(R + width / 2, points, angle, yBottom + height, angleOffset - angle / 2);
+    auto verticesBottom1 = verticesCircle(R - width / 2, points, angle, yBottom, angleOffset - angle / 2);
+    auto verticesBottom2 = verticesCircle(R + width / 2, points, angle, yBottom, angleOffset - angle / 2);
 
     //NORMAL is anticlockwise up!!!!
     //Counterclockwise is frontface

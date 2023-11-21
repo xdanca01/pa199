@@ -6,6 +6,7 @@ in vec3 lightCol;
 in vec3 lightPos;
 in vec3 FragPos;
 in vec3 viewPos;
+in vec3 tmp;
 
 
 layout(location = 0) out vec4 final_color;
@@ -18,7 +19,8 @@ void main()
 
     //Show normals
     vec3 color = vec3(normal.x, normal.y, normal.z);
-
+    //vec3 color = vec3(FragPos.x, FragPos.y, FragPos.z);
+    //vec3 color = -tmp;
     if(useTexture)
     {
         color = texture(sample_texture, tex_coord).xyz;

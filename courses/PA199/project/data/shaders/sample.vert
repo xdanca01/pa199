@@ -18,6 +18,8 @@ out vec3 lightCol;
 out vec3 lightPos;
 out vec3 FragPos;
 out vec3 viewPos;
+out vec3 tmp;
+
 
 void main()
 {
@@ -29,4 +31,5 @@ void main()
     lightPos = lightPosition;
     FragPos = vec3(model * vec4(position, 1.0));
     viewPos = cameraPosition;
+    tmp = vec3(model[0][3], model[1][3], model[2][3]);
 }

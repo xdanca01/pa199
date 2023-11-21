@@ -7,7 +7,7 @@
 namespace Petr_Math {
 		void Vector::copy(Vector const& vec)
 		{
-			for (int i = 0; i < size; ++i)
+			for (int i = 0; i < vec.size; ++i)
 				data[i] = vec.data[i];
 		};
 		Vector::Vector(int s) : size(s)
@@ -45,7 +45,7 @@ namespace Petr_Math {
 				data[i] = num;
 			}
 		}
-		Vector& Vector::operator=(Vector const& vec) { copy(vec); return *this; }
+		Vector& Vector::operator=(Vector const& vec) { size = vec.size; this->data.resize(size); copy(vec); return *this; }
 		float Vector::operator[](int const i) const { return data[i]; }
 		float& Vector::operator[](int const i) { return data[i]; }
 		float Vector::magnitude()

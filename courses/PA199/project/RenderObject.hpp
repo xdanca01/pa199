@@ -22,6 +22,7 @@ public:
     //std::vector<int> indices;
     renderType type;
     GLuint Texture;
+    Petr_Math::Matrix model;
     RenderObject(std::vector<Vertex2> v, renderType t) : type(t), vertices(v),
         VAO([]() -> GLuint {
             GLuint vertex_arrays;
@@ -38,7 +39,8 @@ public:
                 glNamedBufferData(vertex_buffer, v.size() * sizeof(Vertex2), v.data(), GL_STATIC_DRAW);
                 assert(glGetError() == 0U);
                 return vertex_buffer;
-            }())
+            }()),
+        model(4, 1.0f, true)
     {
         //x, y, z
         glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 8);
@@ -72,6 +74,9 @@ public:
             glBindTexture(GL_TEXTURE_2D, texture);
             assert(glGetError() == 0U);
         }
+        int modelLoc = glGetUniformLocation(shader_program, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.transpose().getData());
+        assert(glGetError() == 0U);
 
         int lightColorLoc = glGetUniformLocation(shader_program, "lightColor");
         glUniform3fv(lightColorLoc, 1, lightColor.getData());
