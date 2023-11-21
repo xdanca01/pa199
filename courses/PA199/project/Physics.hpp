@@ -143,9 +143,13 @@ public:
         }
     }
 
-    Petr_Math::Vector moveBall(Petr_Math::Vector Vp)
+    Petr_Math::Vector moveBall(float paddlesSpeed)
     {
         auto n = this->CheckCollision();
+        Petr_Math::Vector Vp(n[2], 0.0f, -n[0]);
+        //TODO check moving and set right speed based on rotation (+- angle)
+        Vp = Vp.normalize() * positionsP[0].radius *  paddlesSpeed;
+        //Vp = Petr_Math::Vector(3, 0.0f);
         //n[3] is returned bool that says what type of collision happened
         if (n[3] < 0.5f)
         {
@@ -154,7 +158,7 @@ public:
         //make it vec3
         n = Petr_Math::Vector(n[0], 0.0f, n[2]);
         n = n.normalize();
-        auto deltaV = movement - Vp;
+        auto deltaV = movement - Vp.normalize();
         //Friction coef
         float Up = 0.5f;
         if (deltaV.dot(n) < 0.0f)

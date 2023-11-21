@@ -73,6 +73,15 @@ namespace Petr_Math {
 		at(2, 3) += z;
 	}
 
+	void Matrix::rotateY(float angle)
+	{
+		angle = -angle * D2R;
+		at(0, 0) = cos(angle);
+		at(0, 2) = sin(angle);
+		at(2, 0) = -sin(angle);
+		at(2, 2) = cos(angle);
+	}
+
 	Matrix& Matrix::operator =(Matrix const& mat)
 	{
 		width = mat.width;

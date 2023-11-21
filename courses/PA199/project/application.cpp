@@ -14,7 +14,7 @@
 #define DEBUG false
 #define ballRADIUS 0.005f
 #define ballX 0.05f
-#define ballZ 0.00f
+#define ballZ 0.0005f
 #define radiusPaddle 0.095f
 #define widthPaddle 0.003f
 #define anglePaddle 30.0f
@@ -23,6 +23,7 @@
 #define radiusBrick 0.02f
 #define radiusGround 0.1f
 #define ballSpeed 0.0004f
+#define paddlesSpeed 2.0f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -323,14 +324,29 @@ void Application::render() {
     //assert(glGetError() == 0U);
     auto Vp = Petr_Math::Vector(0.0f, 0.0f, 0.0f) * ballSpeed;
     //auto Vp = Petr_Math::Vector(-1.0f, 0.0f, 1.0f).normalize() * ballSpeed;
-    auto moveVector = gamePhysics.moveBall(Vp);
+    auto moveVector = gamePhysics.moveBall(paddlesSpeed);
     Petr_Math::Matrix newModel(4, 1.0f, true);
     //newModel.translate(moveVector);
+    //Model matrix for ball
     newModel.translate(moveVector);
     objects[4].model = objects[4].model * newModel;
 }
 
 void Application::render_ui() {}
+
+void Application::RotatePaddles(float angle)
+{
+    Petr_Math::Matrix newModel(4, 1.0f, true);
+    newModel.rotateY(angle);
+    //RenderObjects are at 1-3
+    for (int i = 1; i <= 3; ++i)
+    {
+        objects[i].model = objects[i].model * newModel;
+        //modify angle of Paddles in physics
+        gamePhysics.positionsP[i - 1].angle += angle;
+        gamePhysics.positionsP[i - 1].Normalize();
+    }
+}
 
 void Application::on_resize(int width, int height) {
     // Calls the default implementation to set the class variables.
@@ -357,6 +373,23 @@ void Application::on_key_pressed(int key, int scancode, int action, int mods) {
             break;
         case GLFW_KEY_B:
             blue = 1;
+            break;
+        case GLFW_KEY_LEFT:
+            RotatePaddles(paddlesSpeed);
+            break;
+        case GLFW_KEY_RIGHT:
+            RotatePaddles(-paddlesSpeed);
+            break;
+        }
+    }
+    else if (action == GLFW_REPEAT)
+    {
+        switch (key) {
+        case GLFW_KEY_LEFT:
+            RotatePaddles(paddlesSpeed);
+            break;
+        case GLFW_KEY_RIGHT:
+            RotatePaddles(-paddlesSpeed);
             break;
         }
     }

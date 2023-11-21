@@ -48,7 +48,6 @@ class Application : public IApplication {
     Petr_Math::Vector lightPosition;
     std::vector<RenderObject> objects;
 
-
     // ----------------------------------------------------------------------------
     // Constructors & Destructors
     // ----------------------------------------------------------------------------
@@ -108,4 +107,5 @@ class Application : public IApplication {
 
     void VerticesToTriangles(std::vector<Vertex2>& v1, std::vector<Vertex2>& v2, std::vector<Vertex2>& output, bool clockwise);
     void VerticesToTriangles(std::vector<Vertex2>& v1, Vertex2& v2, std::vector<Vertex2>& output, bool clockwise);
+    void RotatePaddles(float angle);
 };

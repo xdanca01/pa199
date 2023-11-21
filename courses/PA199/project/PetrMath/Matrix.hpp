@@ -4,6 +4,10 @@
 #include "Vector.hpp"
 #include <vector>
 
+#define M_PI       3.14159265358979323846   // pi
+#define R2D 180.0f/M_PI
+#define D2R M_PI/180.0f
+
 namespace Petr_Math {
 
 	class Matrix {
@@ -33,6 +37,7 @@ namespace Petr_Math {
 		Matrix(int wh, float num, bool identity);
 		void translate(float x, float y, float z);
 		void translate(Vector moveVec);
+		void rotateY(float angle);
 		Vector& operator=(Vector const& vec);
 		float at(int const w, int const h) const;
 		float& at(int const w, int const h);
