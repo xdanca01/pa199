@@ -155,7 +155,7 @@ public:
         }
     }
 
-    Petr_Math::Vector moveBall(float paddlesSpeed, int paddlesMove)
+    Petr_Math::Vector moveBall(float paddlesSpeed, int paddlesMove, float deltaTime)
     {
         auto n = this->CheckCollision();
         Petr_Math::Vector Vp(n[2], 0.0f, -n[0]);
@@ -183,8 +183,8 @@ public:
             auto Vres = movement + (deltaVn.opposite() * 2) + deltaVtt;
             movement = Vres.normalize() * speed;
         }
-        positionBall[0] += movement[0];
-        positionBall[1] += movement[2];
+        positionBall[0] += movement[0] * deltaTime;
+        positionBall[1] += movement[2] * deltaTime;
         return movement;
     }
 };

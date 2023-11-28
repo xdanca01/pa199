@@ -22,8 +22,8 @@
 #define numOfBricks 6
 #define radiusBrick 0.02f
 #define radiusGround 0.1f
-#define ballSpeed 0.0004f
-#define paddlesSpeed 0.5f
+#define ballSpeed 0.04f
+#define paddlesSpeed 50.0f
 #define FOV 174.0f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
@@ -185,6 +185,8 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
             lightColor(1.0f, 1.0f, 1.0f),
             lightPosition(0.0, 1.0f, 0.0f)
 {
+    lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+    deltaTime = 0.0f;
     prepare_physics();
     prepare_camera();
     createObjects();
@@ -296,6 +298,9 @@ void Application::prepare_camera()
 void Application::update(float delta) {}
 
 void Application::render() {
+    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+    deltaTime = (float)(now - lastTime).count()/1000.0f;
+    lastTime = now;
     // Sets the clear color.
     glClearColor(red, green, blue, 1.0f);
     
@@ -349,11 +354,11 @@ void Application::render() {
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     //assert(glGetError() == 0U);
     auto Vp = Petr_Math::Vector(0.0f, 0.0f, 0.0f) * ballSpeed;
-    RotatePaddles(paddlesSpeed * rotatePaddles);
-    auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles);
+    RotatePaddles(paddlesSpeed * rotatePaddles * deltaTime);
+    auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles, deltaTime);
     Petr_Math::Matrix newModel(4, 1.0f, true);
     //Model matrix for ball
-    newModel.translate(moveVector);
+    newModel.translate(moveVector * deltaTime);
     objects[4].model = objects[4].model * newModel;
 }
 
