@@ -185,6 +185,7 @@ public:
         }
         positionBall[0] += movement[0] * deltaTime;
         positionBall[1] += movement[2] * deltaTime;
+        //TODO set what was hit in some variable
         return movement;
     }
 };

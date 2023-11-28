@@ -22,8 +22,8 @@
 #define numOfBricks 6
 #define radiusBrick 0.02f
 #define radiusGround 0.1f
-#define ballSpeed 0.04f
-#define paddlesSpeed 50.0f
+#define ballSpeed 0.08f
+#define paddlesSpeed 75.0f
 #define FOV 174.0f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
@@ -423,10 +423,14 @@ void Application::on_key_pressed(int key, int scancode, int action, int mods) {
     {
         switch (key) {
         case GLFW_KEY_LEFT:
-            rotatePaddles = 0;
+            if (rotatePaddles == 1) {
+                rotatePaddles = 0;
+            }
             break;
         case GLFW_KEY_RIGHT:
-            rotatePaddles = 0;
+            if (rotatePaddles == -1) {
+                rotatePaddles = 0;
+            }
             break;
         }
     }
