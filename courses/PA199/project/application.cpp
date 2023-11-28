@@ -24,6 +24,7 @@
 #define radiusGround 0.1f
 #define ballSpeed 0.0004f
 #define paddlesSpeed 0.5f
+#define FOV 174.0f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -223,7 +224,20 @@ Application::~Application()
 Petr_Math::Matrix Application::perspective(double fov, double aspect, double near, double far)
 {
     fov = D2R * fov;
-    float yScale = 1.0f / tan(fov / 2);
+    float scale = 1.0f / tan(fov * 0.5);
+    float r = aspect * scale;
+    float l = -r;
+    float t = scale;
+    float b = -t;
+    float dataForMat[16] =
+    {
+        2.0f * near / (r - l), 0.0f, 0.0f, 0.0f,
+        0.0f, 2.0f * near / (t - b), 0.0f, 0.0f,
+        (r + l) / (r - l), (t + b) / (t - b), -(far + near) / (far - near), -1.0f,
+        0.0f, 0.0f, -2.0f * far * near / (far - near), 0.0f
+    };
+    /*
+    float yScale = 1.0f / tan(fov / 2.0f);
     float xScale = yScale * aspect;
     float dist = far - near;
     float dataForMat[16] =
@@ -232,7 +246,7 @@ Petr_Math::Matrix Application::perspective(double fov, double aspect, double nea
         0.0f, yScale, 0.0f, 0.0f,
         0.0f, 0.0f, -far/dist, -1.0f,
         0.0f, 0.0f, -(far * near) / dist, 0.0f
-    };
+    };*/
     return Petr_Math::Matrix(4, 4, dataForMat);
 }
 
@@ -276,7 +290,7 @@ void Application::SetViewSide()
 void Application::prepare_camera()
 {
     SetViewSide();
-    camera.projection_matrix = perspective(90.0f, width / height, 0.1f, 10.0f).transpose();
+    camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 100.0f).transpose();
 }
 
 void Application::update(float delta) {}
@@ -364,6 +378,7 @@ void Application::on_resize(int width, int height) {
     IApplication::on_resize(width, height);
     // Changes the viewport.
     glViewport(0, 0, width, height);
+    camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 100.0f).transpose();
 }
 
 void Application::on_mouse_move(double x, double y) {}

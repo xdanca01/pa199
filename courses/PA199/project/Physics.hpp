@@ -159,8 +159,7 @@ public:
     {
         auto n = this->CheckCollision();
         Petr_Math::Vector Vp(n[2], 0.0f, -n[0]);
-        //TODO check moving and set right speed based on rotation (+- angle)
-        Vp = Vp.normalize() * positionsP[0].radius *  paddlesSpeed * paddlesMove;
+        Vp = Vp.normalize() * positionsP[0].radius * paddlesSpeed * paddlesMove;
         //n[3] is returned bool that says what type of collision happened
         if (n[3] < 0.5f)
         {

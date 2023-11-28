@@ -3,9 +3,9 @@
 #pragma once
 #include "Vector.hpp"
 #include "Matrix.hpp"
-#include "AxisAngle.hpp"
 
 namespace Petr_Math {
+	class AxisAngle;
 
 	class Quaternion {
 	public:

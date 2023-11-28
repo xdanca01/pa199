@@ -1,10 +1,9 @@
 // This is a tutorial file. Feel free to remove it.
 
 #include "Quaternion.hpp"
-
+#include "AxisAngle.hpp"
 
 namespace Petr_Math {
-	class AxisAngle;
 
 	Quaternion::Quaternion(float scalar, Vector v) : s(scalar), u(v)
 	{
