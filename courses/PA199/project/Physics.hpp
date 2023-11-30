@@ -15,9 +15,9 @@ public:
     float widthPaddle;
     float radiusGround;
     std::vector<Petr_Math::PolarCoordinates> positionsP;
-    std::vector<Petr_Math::PolarCoordinates> positionsB;
     Petr_Math::Vector movement;
     float speed;
+    Petr_Math::PolarCoordinates lastHit;
 
     Physics& operator =(Physics const& phys)
     {
@@ -27,7 +27,6 @@ public:
         angleWidthPaddle = phys.angleWidthPaddle;
         widthPaddle = phys.widthPaddle;
         radiusGround = phys.radiusGround;
-        positionsB = phys.positionsB;
         positionsP = phys.positionsP;
         movement = Petr_Math::Vector(phys.movement);
         speed = phys.speed;
@@ -35,17 +34,17 @@ public:
     }
 
 
-    Physics() : positionBall(0), positionsP(), positionsB(), movement(0) {};
+    Physics() : positionBall(0), positionsP(), movement(0), lastHit(0.0f, 0.0f) {};
     Physics(Petr_Math::Vector Pb, std::vector<Petr_Math::PolarCoordinates> PosPaddles, float Wp, float PhiP,
-        std::vector<Petr_Math::PolarCoordinates> PosBricks, float Wb, float PhiB, float Rg, float ballSpeed) : positionBall(Pb),
-        angleWidthBricks(PhiB), widthBricks(Wb), angleWidthPaddle(PhiP), widthPaddle(Wp), radiusGround(Rg), positionsB(PosBricks),
-        positionsP(PosPaddles), movement(Pb.opposite()), speed(ballSpeed)
+        float Wb, float PhiB, float Rg, float ballSpeed) : positionBall(Pb),
+        angleWidthBricks(PhiB), widthBricks(Wb), angleWidthPaddle(PhiP), widthPaddle(Wp), radiusGround(Rg),
+        positionsP(PosPaddles), movement(Pb.opposite()), speed(ballSpeed), lastHit(0.0f, 0.0f)
     {
         movement = Petr_Math::Vector(movement[0], 0.0f, movement[1]);
         movement = movement.normalize() * speed;
     }
 
-    Petr_Math::Vector CheckCollision()
+    Petr_Math::Vector CheckCollision(std::vector<Petr_Math::PolarCoordinates> positionsB)
     {
         float distanceFromCenter = sqrt(positionBall[0] * positionBall[0] + positionBall[1] * positionBall[1]);
         Petr_Math::Vector result(4, 0.0f);
@@ -146,18 +145,20 @@ public:
         //Case 1
         if (minDifference(ball.angle, Op) <= angleWidthPaddle)
         {
+            lastHit = Petr_Math::PolarCoordinates(Rp, Op);
             return paddlePhase1(Rp);
         }
         //Case 2
         else
         {
+            lastHit = Petr_Math::PolarCoordinates(Rp, Op);
             return paddlePhase2(positionBall[2], ball.angle, Rp, Op, widthPaddle, angleWidthPaddle);
         }
     }
 
-    Petr_Math::Vector moveBall(float paddlesSpeed, int paddlesMove, float deltaTime)
+    Petr_Math::Vector moveBall(float paddlesSpeed, int paddlesMove, float deltaTime, std::vector<Petr_Math::PolarCoordinates> positionsB)
     {
-        auto n = this->CheckCollision();
+        auto n = this->CheckCollision(positionsB);
         Petr_Math::Vector Vp(n[2], 0.0f, -n[0]);
         Vp = Vp.normalize() * positionsP[0].radius * paddlesSpeed * paddlesMove;
         //n[3] is returned bool that says what type of collision happened

@@ -25,6 +25,7 @@
 #define ballSpeed 0.08f
 #define paddlesSpeed 75.0f
 #define FOV 174.0f
+#define brickHeight 0.01f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -187,9 +188,9 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
 {
     lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     deltaTime = 0.0f;
+    createObjects();
     prepare_physics();
     prepare_camera();
-    createObjects();
     glViewport(0, 0, width, height);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -266,15 +267,16 @@ void Application::prepare_physics()
     paddles.push_back(paddle1);
     paddles.push_back(paddle2);
     paddles.push_back(paddle3);
-    float angleWidthBrick = 360.0f / float(numOfBricks);
-    for (int i = 0; i < numOfBricks; ++i)
+    for(int i = 0; i < this->bricks.size(); ++i)
     {
-        Petr_Math::PolarCoordinates brick(radiusBrick, angleWidthBrick * i + angleWidthBrick / 2.0f);
-        bricks.push_back(brick);
+        if (this->bricks[i].height < ballRADIUS * 2.0f)
+        {
+            bricks.push_back(this->bricks[i].polarCoords);
+        }
+        
     }
-    
-
-    gamePhysics = Physics(positionBall, paddles, widthPaddle / 2.0f, anglePaddle / 2.0f, bricks, brickWidth / 2.0f, angleWidthBrick / 2.0f, radiusGround, ballSpeed);
+    float angleWidthBrick = 360.0f / (float)numOfBricks;
+    gamePhysics = Physics(positionBall, paddles, widthPaddle / 2.0f, anglePaddle / 2.0f, brickWidth / 2.0f, angleWidthBrick / 2.0f, radiusGround, ballSpeed);
 }
 
 void Application::SetViewTop()
@@ -355,7 +357,16 @@ void Application::render() {
     //assert(glGetError() == 0U);
     auto Vp = Petr_Math::Vector(0.0f, 0.0f, 0.0f) * ballSpeed;
     RotatePaddles(paddlesSpeed * rotatePaddles * deltaTime);
-    auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles, deltaTime);
+    std::vector<Petr_Math::PolarCoordinates> bricks;
+    for (int i = 0; i < this->bricks.size(); ++i)
+    {
+        if (this->bricks[i].height < ballRADIUS * 2.0f)
+        {
+            bricks.push_back(this->bricks[i].polarCoords);
+        }
+
+    }
+    auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles, deltaTime, bricks);
     Petr_Math::Matrix newModel(4, 1.0f, true);
     //Model matrix for ball
     newModel.translate(moveVector * deltaTime);
@@ -509,6 +520,13 @@ void Application::drawObjects()
             obj.Render(shader_program, lightColor, lightPosition, camera.eye_position);
         }
     }
+    for (auto obj : bricks)
+    {
+        if (obj.active == true)
+        {
+            obj.render.Render(shader_program, lightColor, lightPosition, camera.eye_position);
+        }
+    }
     //objects[1].Render();
 }
 
@@ -520,43 +538,56 @@ void Application::createObjects()
     Petr_Math::Vector green(0.0f, 1.0f, 0.0f);
     Petr_Math::Vector red(1.0f, 0.0f, 0.0f);
     Petr_Math::Vector blue(0.0f, 0.0f, 1.0f);
-
+    auto pink = blue + red;
+    auto yellow = red + green;
 
     RenderObject ground(vertices, FAN, white * 0.3f, green, white * 0.4f);
     objects.push_back(ground);
     //Create paddle 1 
     vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.01f, widthPaddle, anglePaddle, 0.0f);
-    RenderObject paddle1(vertices, INDICES, white * 0.3f, green, white * 0.4f);
+    RenderObject paddle1(vertices, INDICES, red + white * 0.3f, red, red + white * 0.4f);
     objects.push_back(paddle1);
     //Create paddle 2
     vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.01f, widthPaddle, anglePaddle, 120.0f);
-    RenderObject paddle2(vertices, INDICES, white * 0.3f, green, white * 0.4f);
+    RenderObject paddle2(vertices, INDICES, red + white * 0.3f, red, red + white * 0.4f);
     objects.push_back(paddle2);
     //Create paddle 3
     vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.01f, widthPaddle, anglePaddle, 240.0f);
-    RenderObject paddle3(vertices, INDICES, white * 0.3f, green, white * 0.4f);
+    RenderObject paddle3(vertices, INDICES, red + white * 0.3f, red, red + white * 0.4f);
     objects.push_back(paddle3);
 
     vertices = verticesBall(ballRADIUS, 16, 32, 0.0f, ballX, ballZ);
-    RenderObject ball(vertices, INDICES, white * 0.3f, green, white * 0.4f);
+    RenderObject ball(vertices, INDICES, blue * 0.1f, blue * 0.75f, red * 0.4f);
     objects.push_back(ball);
 
     float step = 360.0f / (float)numOfBricks;
-    for (int i = 0; i < numOfBricks / 2; ++i)
+    int numOfRows = 3;
+    for (int row = 0; row < numOfRows; ++row)
     {
-        vertices = VerticesBrick(15, radiusBrick, 0.0f, 0.01, brickWidth, step, i * step + 240.0f);
-        RenderObject brick(vertices, INDICES, white * 0.3f, green, white * 0.4f);
-        objects.push_back(brick);
+        for (int i = 0; i < numOfBricks / 2; ++i)
+        {
+            Petr_Math::PolarCoordinates PC(radiusBrick, i * step + 240.0f + step / 2.0f);
+            auto color = (i + row) % 2 == 0 ? pink : yellow;
+            vertices = VerticesBrick(15, radiusBrick, 0.0f + brickHeight * row, brickHeight, brickWidth, step, i * step + 240.0f);
+            RenderObject brick(vertices, INDICES, white * 0.3f, color, color * 0.4f);
+            bricks.push_back(Brick(brick, PC, row * brickHeight));
+        }
+        Petr_Math::PolarCoordinates PC(radiusBrick, step + 120.0f + step / 2.0f);
+        auto color = row % 2 == 0 ? yellow : pink;
+        vertices = VerticesBrick(15, 0.02, 0.0f + brickHeight * row, brickHeight, brickWidth, step, step + 120.0f);
+        RenderObject brick(vertices, INDICES, white * 0.3f, color, color * 0.4f);
+        bricks.push_back(Brick(brick, PC, row * brickHeight));
+        PC = Petr_Math::PolarCoordinates(radiusBrick, step + 60.0f + step / 2.0f);
+        color = row % 2 == 0 ? pink : yellow;
+        vertices = VerticesBrick(15, 0.02, 0.0f + brickHeight * row, brickHeight, brickWidth, step, step + 60.0f);
+        brick = RenderObject(vertices, INDICES, white * 0.3f, color, color * 0.4f);
+        bricks.push_back(Brick(brick, PC, row * brickHeight));
+        color = row % 2 == 0 ? yellow : pink;
+        PC= Petr_Math::PolarCoordinates(radiusBrick, step + step / 2.0f);
+        vertices = VerticesBrick(15, 0.02, 0.0f + brickHeight * row, brickHeight, brickWidth, step, step + 0.0f);
+        brick = RenderObject(vertices, INDICES, white * 0.3f, color, color * 0.4f);
+        bricks.push_back(Brick(brick, PC, row * brickHeight));
     }
-    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, step + 120.0f);
-    RenderObject brick(vertices, INDICES, white * 0.3f, green, white * 0.4f);
-    objects.push_back(brick);
-    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, step + 60.0f);
-    brick = RenderObject(vertices, INDICES, white * 0.3f, green, white * 0.4f);
-    objects.push_back(brick);
-    vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, step + 0.0f);
-    brick = RenderObject(vertices, INDICES, white * 0.3f, green, white * 0.4f);
-    objects.push_back(brick);
 ;}
 
 std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float angle, float y, float angleOffset)

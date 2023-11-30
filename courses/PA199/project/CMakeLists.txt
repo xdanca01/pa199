@@ -21,7 +21,8 @@ target_sources(PA199_project
             "Camera.hpp"
             "Camera.cpp"
             "RenderObject.hpp"
-            "RenderObject.cpp")
+            "RenderObject.cpp"
+            "Brick.hpp")
 
 # Add sub-directories of your libraries
 add_subdirectory("some_my_library_dir")  # This includes the tutorial library. Can be removed.

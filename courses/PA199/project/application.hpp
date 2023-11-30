@@ -13,6 +13,7 @@
 #include "PetrMath/AxisAngle.hpp"
 #include "PetrMath/Quaternion.hpp"
 #include "Physics.hpp"
+#include "Brick.hpp"
 
 struct Vertex { float x, y, z, u, v; };
 
@@ -47,6 +48,7 @@ class Application : public IApplication {
     std::chrono::milliseconds lastTime;
     Physics gamePhysics;
     float ambientStrength = 0.1;
+    std::vector<Brick> bricks;
     Petr_Math::Vector lightColor;
     Petr_Math::Vector lightPosition;
     std::vector<RenderObject> objects;

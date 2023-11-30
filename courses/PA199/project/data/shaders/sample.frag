@@ -21,30 +21,28 @@ void main()
     vec3 normal = normalize(normal_vec);
 
     //Show normals
-    vec3 color = vec3(normal.x, normal.y, normal.z);
+    //vec3 color = vec3(normal.x, normal.y, normal.z);
     //vec3 color = vec3(FragPos.x, FragPos.y, FragPos.z);
-    //vec3 color = -tmp;
+    //Need to setup color, because of textures
+    vec3 color = vec3(1.0, 1.0, 1.0);
     if(useTexture)
     {
         color = texture(sample_texture, tex_coord).xyz;
     }
-    
-    //vec3 color = vec3(1.0, 1.0, 1.0);
 
     vec3 lightDir = normalize(lightPos - FragPos);
 
     float diff = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = diff * lightCol;
+    vec3 diffuse = diff * lightCol * diffuseMat;
 
     float ambientStrength = 0.1;
-    vec3 ambient = ambientStrength * lightCol;
+    vec3 ambient = ambientStrength * lightCol * ambientMat;
 
     
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    float specularStrength = 0.5;
-    vec3 specular = specularStrength * spec * lightCol;
+    vec3 specular = spec * lightCol * specularMat;
 
     final_color = vec4((ambient + diffuse + specular) * color, 1.0);
     //Gamma correction

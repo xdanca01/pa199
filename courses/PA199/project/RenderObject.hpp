@@ -124,4 +124,11 @@ public:
         glDeleteVertexArrays(1, &VAO);
         glDeleteBuffers(1, &VBO);
     }
+
+    void modifyColor(Petr_Math::Vector color)
+    {
+        a = a * color;
+        d = d * color;
+        s = s * color;
+    }
 };
