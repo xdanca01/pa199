@@ -7,6 +7,9 @@ in vec3 lightPos;
 in vec3 FragPos;
 in vec3 viewPos;
 in vec3 tmp;
+in vec3 ambientMat;
+in vec3 diffuseMat;
+in vec3 specularMat;
 
 
 layout(location = 0) out vec4 final_color;

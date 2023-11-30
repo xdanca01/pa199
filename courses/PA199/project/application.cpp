@@ -507,40 +507,46 @@ void Application::createObjects()
 {
     //Create ground
     auto vertices = verticesGround();
-    RenderObject ground(vertices, FAN);
+    Petr_Math::Vector white(1.0f, 1.0f, 1.0f);
+    Petr_Math::Vector green(0.0f, 1.0f, 0.0f);
+    Petr_Math::Vector red(1.0f, 0.0f, 0.0f);
+    Petr_Math::Vector blue(0.0f, 0.0f, 1.0f);
+
+
+    RenderObject ground(vertices, FAN, white * 0.3f, green, white * 0.4f);
     objects.push_back(ground);
     //Create paddle 1 
     vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.01f, widthPaddle, anglePaddle, 0.0f);
-    RenderObject paddle1(vertices, INDICES);
+    RenderObject paddle1(vertices, INDICES, white * 0.3f, green, white * 0.4f);
     objects.push_back(paddle1);
     //Create paddle 2
     vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.01f, widthPaddle, anglePaddle, 120.0f);
-    RenderObject paddle2(vertices, INDICES);
+    RenderObject paddle2(vertices, INDICES, white * 0.3f, green, white * 0.4f);
     objects.push_back(paddle2);
     //Create paddle 3
     vertices = VerticesPaddle(15, radiusPaddle, 0.0f, 0.01f, widthPaddle, anglePaddle, 240.0f);
-    RenderObject paddle3(vertices, INDICES);
+    RenderObject paddle3(vertices, INDICES, white * 0.3f, green, white * 0.4f);
     objects.push_back(paddle3);
 
     vertices = verticesBall(ballRADIUS, 16, 32, 0.0f, ballX, ballZ);
-    RenderObject ball(vertices, INDICES);
+    RenderObject ball(vertices, INDICES, white * 0.3f, green, white * 0.4f);
     objects.push_back(ball);
 
     float step = 360.0f / (float)numOfBricks;
     for (int i = 0; i < numOfBricks / 2; ++i)
     {
         vertices = VerticesBrick(15, radiusBrick, 0.0f, 0.01, brickWidth, step, i * step + 240.0f);
-        RenderObject brick(vertices, INDICES);
+        RenderObject brick(vertices, INDICES, white * 0.3f, green, white * 0.4f);
         objects.push_back(brick);
     }
     vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, step + 120.0f);
-    RenderObject brick(vertices, INDICES);
+    RenderObject brick(vertices, INDICES, white * 0.3f, green, white * 0.4f);
     objects.push_back(brick);
     vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, step + 60.0f);
-    brick = RenderObject(vertices, INDICES);
+    brick = RenderObject(vertices, INDICES, white * 0.3f, green, white * 0.4f);
     objects.push_back(brick);
     vertices = VerticesBrick(15, 0.02, 0.0f, 0.01, brickWidth, step, step + 0.0f);
-    brick = RenderObject(vertices, INDICES);
+    brick = RenderObject(vertices, INDICES, white * 0.3f, green, white * 0.4f);
     objects.push_back(brick);
 ;}
 

@@ -11,6 +11,9 @@ uniform mat4 projection;
 uniform vec3 lightColor;
 uniform vec3 lightPosition;
 uniform vec3 cameraPosition;
+uniform vec3 diffMat;
+uniform vec3 specMat;
+uniform vec3 ambiMat;
 
 out vec2 tex_coord;
 out vec3 normal_vec;
@@ -19,7 +22,9 @@ out vec3 lightPos;
 out vec3 FragPos;
 out vec3 viewPos;
 out vec3 tmp;
-
+out vec3 ambientMat;
+out vec3 diffuseMat;
+out vec3 specularMat;
 
 void main()
 {
@@ -32,4 +37,7 @@ void main()
     FragPos = vec3(model * vec4(position, 1.0));
     viewPos = cameraPosition;
     tmp = vec3(model[0][3], model[1][3], model[2][3]);
+    ambientMat = ambiMat;
+    diffuseMat = diffMat;
+    specularMat = specMat;
 }

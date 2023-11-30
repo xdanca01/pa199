@@ -22,8 +22,12 @@ public:
     //std::vector<int> indices;
     renderType type;
     GLuint Texture;
+    //Ambient, diffuse, speculat Mat
+    Petr_Math::Vector a;
+    Petr_Math::Vector d;
+    Petr_Math::Vector s;
     Petr_Math::Matrix model;
-    RenderObject(std::vector<Vertex2> v, renderType t) : type(t), vertices(v),
+    RenderObject(std::vector<Vertex2> v, renderType t, Petr_Math::Vector amb, Petr_Math::Vector diff, Petr_Math::Vector spec) : type(t), vertices(v),
         VAO([]() -> GLuint {
             GLuint vertex_arrays;
             glGenVertexArrays(1, &vertex_arrays);
@@ -40,7 +44,8 @@ public:
                 assert(glGetError() == 0U);
                 return vertex_buffer;
             }()),
-        model(4, 1.0f, true)
+        model(4, 1.0f, true),
+        a(amb), d(diff), s(spec)
     {
         //x, y, z
         glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(float) * 8);
@@ -86,6 +91,13 @@ public:
 
         int cameraPosLoc = glGetUniformLocation(shader_program, "cameraPosition");
         glUniform3fv(cameraPosLoc, 1, cameraPosition.getData());
+
+        int matPosLoc = glGetUniformLocation(shader_program, "diffMat");
+        glUniform3fv(matPosLoc, 1, d.getData());
+        matPosLoc = glGetUniformLocation(shader_program, "ambiMat");
+        glUniform3fv(matPosLoc, 1, a.getData());
+        matPosLoc = glGetUniformLocation(shader_program, "specMat");
+        glUniform3fv(matPosLoc, 1, s.getData());
 
         glBindVertexArray(VAO);
 
