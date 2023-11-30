@@ -124,7 +124,12 @@ public:
         Petr_Math::Vector collisionPoint = closestPointOnLine(A, B, Pb);
         auto tmp = Pb - collisionPoint;
         float distance = tmp.magnitude();
-        return distance > 0.0f && distance <= radiusBall ? tmp.normalize() : Petr_Math::Vector(3, 0.0f);
+        if (distance > 0.0f && distance <= radiusBall)
+        {
+            lastHit = Petr_Math::PolarCoordinates(Rp, Op);
+            return tmp.normalize();
+        }
+        return Petr_Math::Vector(3, 0.0f);
     }
 
     Petr_Math::Vector paddlePhase(std::vector<Petr_Math::PolarCoordinates> positions, float widthPaddle, float angleWidthPaddle)
@@ -151,13 +156,13 @@ public:
         //Case 2
         else
         {
-            lastHit = Petr_Math::PolarCoordinates(Rp, Op);
             return paddlePhase2(positionBall[2], ball.angle, Rp, Op, widthPaddle, angleWidthPaddle);
         }
     }
 
     Petr_Math::Vector moveBall(float paddlesSpeed, int paddlesMove, float deltaTime, std::vector<Petr_Math::PolarCoordinates> positionsB)
     {
+        lastHit = Petr_Math::PolarCoordinates(0.0f, 0.0f);
         auto n = this->CheckCollision(positionsB);
         Petr_Math::Vector Vp(n[2], 0.0f, -n[0]);
         Vp = Vp.normalize() * positionsP[0].radius * paddlesSpeed * paddlesMove;

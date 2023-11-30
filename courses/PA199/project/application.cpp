@@ -26,6 +26,7 @@
 #define paddlesSpeed 75.0f
 #define FOV 174.0f
 #define brickHeight 0.01f
+#define gravitySpeed 0.009f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -184,7 +185,7 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
                 return vertex_buffer;
             }()),
             lightColor(1.0f, 1.0f, 1.0f),
-            lightPosition(0.0, 1.0f, 0.0f)
+            lightPosition(0.0, 0.1f, 0.0f)
 {
     lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     deltaTime = 0.0f;
@@ -366,11 +367,42 @@ void Application::render() {
         }
 
     }
-    auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles, deltaTime, bricks);
-    Petr_Math::Matrix newModel(4, 1.0f, true);
-    //Model matrix for ball
-    newModel.translate(moveVector * deltaTime);
-    objects[4].model = objects[4].model * newModel;
+    if (bricks.size() > 0)
+    {
+        auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles, deltaTime, bricks);
+        bool removed = false;
+        std::vector<int> removeIndexes;
+        for (int i = 0; i < this->bricks.size(); ++i)
+        {
+            if (this->bricks[i].polarCoords == gamePhysics.lastHit)
+            {
+                if (this->bricks[i].height < ballRADIUS * 2.0f)
+                {
+                    this->bricks[i].hit();
+                    if (this->bricks[i].active == false)
+                    {
+                        removed = true;
+                        removeIndexes.push_back(i);
+                    }
+                }
+                //Move other bricks down
+                else if (removed == true)
+                {
+                    this->bricks[i].wantedHeight -= brickHeight;
+                }
+            }
+            this->bricks[i].moveOnHeight(deltaTime, gravitySpeed);
+        }
+        for (int i = 0; i < removeIndexes.size(); ++i)
+        {
+            this->bricks.erase(this->bricks.begin() + removeIndexes[i]);
+        }
+
+        Petr_Math::Matrix newModel(4, 1.0f, true);
+        //Model matrix for ball
+        newModel.translate(moveVector * deltaTime);
+        objects[4].model = objects[4].model * newModel;
+    }
 }
 
 void Application::render_ui() {}
@@ -569,23 +601,23 @@ void Application::createObjects()
             Petr_Math::PolarCoordinates PC(radiusBrick, i * step + 240.0f + step / 2.0f);
             auto color = (i + row) % 2 == 0 ? pink : yellow;
             vertices = VerticesBrick(15, radiusBrick, 0.0f + brickHeight * row, brickHeight, brickWidth, step, i * step + 240.0f);
-            RenderObject brick(vertices, INDICES, white * 0.3f, color, color * 0.4f);
+            RenderObject brick(vertices, INDICES, color * 0.8f, color, color * 0.4f);
             bricks.push_back(Brick(brick, PC, row * brickHeight));
         }
         Petr_Math::PolarCoordinates PC(radiusBrick, step + 120.0f + step / 2.0f);
         auto color = row % 2 == 0 ? yellow : pink;
         vertices = VerticesBrick(15, 0.02, 0.0f + brickHeight * row, brickHeight, brickWidth, step, step + 120.0f);
-        RenderObject brick(vertices, INDICES, white * 0.3f, color, color * 0.4f);
+        RenderObject brick(vertices, INDICES, color * 0.8f, color, color * 0.4f);
         bricks.push_back(Brick(brick, PC, row * brickHeight));
         PC = Petr_Math::PolarCoordinates(radiusBrick, step + 60.0f + step / 2.0f);
         color = row % 2 == 0 ? pink : yellow;
         vertices = VerticesBrick(15, 0.02, 0.0f + brickHeight * row, brickHeight, brickWidth, step, step + 60.0f);
-        brick = RenderObject(vertices, INDICES, white * 0.3f, color, color * 0.4f);
+        brick = RenderObject(vertices, INDICES, color * 0.8f, color, color * 0.4f);
         bricks.push_back(Brick(brick, PC, row * brickHeight));
         color = row % 2 == 0 ? yellow : pink;
         PC= Petr_Math::PolarCoordinates(radiusBrick, step + step / 2.0f);
         vertices = VerticesBrick(15, 0.02, 0.0f + brickHeight * row, brickHeight, brickWidth, step, step + 0.0f);
-        brick = RenderObject(vertices, INDICES, white * 0.3f, color, color * 0.4f);
+        brick = RenderObject(vertices, INDICES, color * 0.8f, color, color * 0.4f);
         bricks.push_back(Brick(brick, PC, row * brickHeight));
     }
 ;}

@@ -15,5 +15,6 @@ namespace Petr_Math {
 		PolarCoordinates(float radius, float angleInDegrees);
 		PolarCoordinates(Petr_Math::Vector CartesianCords);
 		Petr_Math::Vector toCartesian();
+		bool operator==(PolarCoordinates PC);
 	};
 }

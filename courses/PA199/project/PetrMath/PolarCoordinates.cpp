@@ -40,4 +40,12 @@ namespace Petr_Math {
 		float y = radius * sin(angle * D2R);
 		return Petr_Math::Vector(x, y, 0.0f);
 	}
+	bool PolarCoordinates::operator==(PolarCoordinates PC)
+	{
+		if (PC.radius == radius && PC.angle == angle)
+		{
+			return true;
+		}
+		return false;
+	}
 }
