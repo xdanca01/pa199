@@ -43,6 +43,8 @@ class Application : public IApplication {
     GLuint VBO;
     GLuint VAO;
     int rotatePaddles;
+    float deltaTime;
+    std::chrono::milliseconds lastTime;
     Physics gamePhysics;
     float ambientStrength = 0.1;
     Petr_Math::Vector lightColor;
