@@ -198,8 +198,8 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
     glFrontFace(GL_CCW);
     /*glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);*/
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    /*glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);*/
 }
 
 Application::~Application()
@@ -291,13 +291,14 @@ void Application::SetViewSide()
 {
     camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 1.0f);
     camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 1.0f, -1.0f));
-    camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 100.0f).transpose();
+    camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 10.0f).transpose();
 }
 
 void Application::prepare_camera()
 {
     SetViewSide();
-    camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 100.0f).transpose();
+    top = false;
+    camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 10.0f).transpose();
 }
 
 void Application::update(float delta) {}
@@ -565,7 +566,7 @@ void Application::drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_
 void Application::drawObjects()
 {
     glUseProgram(shader_program);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     assert(glGetError() == 0U);
     /*int modelLoc = glGetUniformLocation(shader_program, "model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());

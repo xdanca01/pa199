@@ -23,8 +23,11 @@ void main()
     //Show normals
     //vec3 color = vec3(normal.x, normal.y, normal.z);
     //vec3 color = vec3(FragPos.x, FragPos.y, FragPos.z);
+    //vec3 color = vec3(gl_FragDepth + 0.1);
     //Need to setup color, because of textures
     vec3 color = vec3(1.0, 1.0, 1.0);
+    /*final_color = vec4(color, 1.0);
+    return;*/
     if(useTexture)
     {
         color = texture(sample_texture, tex_coord).xyz;

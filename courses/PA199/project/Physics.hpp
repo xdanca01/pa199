@@ -73,17 +73,18 @@ public:
 
     float minDifference(float first, float second)
     {
-        if (first > 180.0f)
+        if ((first > 180.0f && second > 180.0f) || (first < 180.0f && second < 180.0f))
         {
-            first = -(360.0f - first);
+            return abs(first - second);
         }
-        if (second > 180.0f)
+        else if (first > 180)
         {
-            second = -(360.0f - second);
+            return fminf(abs(first - second), abs(360.0f  - first + second));
         }
-        return abs(first - second);
+        return fminf(abs(second - first), abs(360.0f - second + first));
     }
 
+    //Op on Left of O?
     bool onLeft(float O, float Op)
     {
         if (O > Op) return false;
@@ -189,7 +190,6 @@ public:
         }
         positionBall[0] += movement[0] * deltaTime;
         positionBall[1] += movement[2] * deltaTime;
-        //TODO set what was hit in some variable
         return movement;
     }
 
