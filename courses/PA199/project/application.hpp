@@ -25,6 +25,7 @@ class Application : public IApplication {
     // Variables
     // ----------------------------------------------------------------------------
   private:
+      bool top;
     Petr_Math::Matrix model;
     float red = 0.0f;
     float green = 0.0f;
@@ -70,6 +71,8 @@ class Application : public IApplication {
     void prepare_camera();
     Petr_Math::Matrix perspective(double fov, double aspect, double near, double far);
 
+    Petr_Math::Matrix orthographic(double near, double far, float scale);
+
     /** @copydoc IApplication::update */
     void update(float delta) override;
 
@@ -104,6 +107,8 @@ class Application : public IApplication {
     void SetViewSide();
 
     void SetViewTop();
+
+    void ResetBall();
 
     std::vector<Vertex2> verticesCircle(float radius, int vertices, float angle, float y, float angleOffset = 0.0f);
 

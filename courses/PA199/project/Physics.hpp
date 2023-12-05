@@ -44,13 +44,14 @@ public:
         movement = movement.normalize() * speed;
     }
 
-    Petr_Math::Vector CheckCollision(std::vector<Petr_Math::PolarCoordinates> positionsB)
+    Petr_Math::Vector CheckCollision(std::vector<Petr_Math::PolarCoordinates> positionsB, bool &collision)
     {
         float distanceFromCenter = sqrt(positionBall[0] * positionBall[0] + positionBall[1] * positionBall[1]);
         Petr_Math::Vector result(4, 0.0f);
         //GameOver
         if (distanceFromCenter - positionBall[2] > radiusGround)
         {
+            collision = true;
             //TODO GAME OVER
         }
         //Possible collision with paddle
@@ -98,9 +99,6 @@ public:
         float len = dir.magnitude();
         dir = dir.normalize();
         line = line.normalize();
-        //float t = ;
-        //t = std::clamp(t, 0.0f, 1.0f);
-        //return START + (line * t);
         return START + line * len * dotVal;
     }
 
@@ -160,10 +158,10 @@ public:
         }
     }
 
-    Petr_Math::Vector moveBall(float paddlesSpeed, int paddlesMove, float deltaTime, std::vector<Petr_Math::PolarCoordinates> positionsB)
+    Petr_Math::Vector moveBall(float paddlesSpeed, int paddlesMove, float deltaTime, std::vector<Petr_Math::PolarCoordinates> positionsB, bool &collision)
     {
         lastHit = Petr_Math::PolarCoordinates(0.0f, 0.0f);
-        auto n = this->CheckCollision(positionsB);
+        auto n = this->CheckCollision(positionsB, collision);
         Petr_Math::Vector Vp(n[2], 0.0f, -n[0]);
         Vp = Vp.normalize() * positionsP[0].radius * paddlesSpeed * paddlesMove;
         //n[3] is returned bool that says what type of collision happened
@@ -193,5 +191,12 @@ public:
         positionBall[1] += movement[2] * deltaTime;
         //TODO set what was hit in some variable
         return movement;
+    }
+
+    void ResetBall(Petr_Math::Vector Pb)
+    {
+        positionBall = Pb;
+        movement = Petr_Math::Vector(-Pb[0], 0.0f, -Pb[1]);
+        movement = movement.normalize() * speed;
     }
 };

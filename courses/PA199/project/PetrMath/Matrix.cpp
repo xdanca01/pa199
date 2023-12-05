@@ -49,7 +49,7 @@ namespace Petr_Math {
 			{
 				if (i == j)
 				{
-					data[i * wh + j] = 1.0f;
+					data[i * wh + j] = num;
 				}
 				else
 				{

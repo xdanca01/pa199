@@ -284,12 +284,14 @@ void Application::SetViewTop()
 {
     camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 0.0f);
     camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 0.0f, -1.0f));
+    camera.projection_matrix = orthographic(0.1f, 100.0f, 160.0f);
 }
 
 void Application::SetViewSide()
 {
     camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 1.0f);
     camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 1.0f, -1.0f));
+    camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 100.0f).transpose();
 }
 
 void Application::prepare_camera()
@@ -369,7 +371,12 @@ void Application::render() {
     }
     if (bricks.size() > 0)
     {
-        auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles, deltaTime, bricks);
+        bool collided = false;
+        auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles, deltaTime, bricks, collided);
+        if (collided)
+        {
+            ResetBall();
+        }
         bool removed = false;
         std::vector<int> removeIndexes;
         for (int i = 0; i < this->bricks.size(); ++i)
@@ -426,10 +433,39 @@ void Application::on_resize(int width, int height) {
     IApplication::on_resize(width, height);
     // Changes the viewport.
     glViewport(0, 0, width, height);
-    camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 100.0f).transpose();
+    if (top)
+    {
+        SetViewTop();
+    }
+    else
+    {
+        //camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 100.0f).transpose();
+        SetViewSide();
+    }
 }
 
 void Application::on_mouse_move(double x, double y) {}
+
+Petr_Math::Matrix Application::orthographic(double near, double far, float scale)
+{
+    scale = 10.0f;
+    float sc = (float)width / height;
+    float r = sc;
+    float l = 0.0f;
+    float t = 1.0f;
+    float b = 0.0f;
+    float mid_x = (l + r) / 2;
+    float mid_y = (b + t) / 2;
+    float mid_z = (-near + -far) / 2;
+    float dataForMat[16] =
+    {
+        scale * 2.0f/(r-l), 0.0f, 0.0f, -(r + l)/(r-l),
+        0.0f, scale * 2.0f / (t - b), 0.0f, -(t + b) / (t - b),
+        0.0f, 0.0f,  scale * 2.0f / (far - near), -(far + near) / (far - near),
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+    return Petr_Math::Matrix(4, 4, dataForMat);
+}
 
 void Application::on_mouse_button(int button, int action, int mods) {}
 
@@ -456,8 +492,10 @@ void Application::on_key_pressed(int key, int scancode, int action, int mods) {
             break;
         case GLFW_KEY_1:
             SetViewSide();
+            top = false;
             break;
         case GLFW_KEY_2:
+            top = true;
             SetViewTop();
             break;
         }
@@ -663,6 +701,13 @@ std::vector<Vertex2> Application::verticesCircle(float radius, int verts, float 
         vertices[i].v = (vertices[i].z - zMin) / (zMax - zMin);
     }
     return vertices;
+}
+
+void Application::ResetBall()
+{
+    objects[4].model = Petr_Math::Matrix(4, 1.0f, true);
+    auto positionBall = Petr_Math::Vector(ballX, ballZ, ballRADIUS);
+    gamePhysics.ResetBall(positionBall);
 }
 
 std::vector<Vertex2> Application::verticesGround()
