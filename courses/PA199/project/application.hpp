@@ -71,7 +71,7 @@ class Application : public IApplication {
     void prepare_camera();
     Petr_Math::Matrix perspective(double fov, double aspect, double near, double far);
 
-    Petr_Math::Matrix orthographic(double near, double far, float scale);
+    Petr_Math::Matrix orthographic(double left, double right, double bottom, double top, double near, double far, float scale);
 
     /** @copydoc IApplication::update */
     void update(float delta) override;

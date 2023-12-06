@@ -33,7 +33,6 @@ public:
         return *this;
     }
 
-
     Physics() : positionBall(0), positionsP(), movement(0), lastHit(0.0f, 0.0f) {};
     Physics(Petr_Math::Vector Pb, std::vector<Petr_Math::PolarCoordinates> PosPaddles, float Wp, float PhiP,
         float Wb, float PhiB, float Rg, float ballSpeed) : positionBall(Pb),
@@ -62,7 +61,7 @@ public:
             result = Petr_Math::Vector(result[0], result[1], result[2], 1.0f);
         }
         //Possible collision with bricks
-        else if (distanceFromCenter + positionBall[2] >= positionsB[0].radius - widthBricks/2 &&
+        else if (positionsB.size() > 0 && distanceFromCenter + positionBall[2] >= positionsB[0].radius - widthBricks/2 &&
                  distanceFromCenter - positionBall[2] <= positionsB[0].radius + widthBricks/2)
         {
             result = paddlePhase(positionsB, widthBricks, angleWidthBricks);
@@ -92,11 +91,34 @@ public:
         return true;
     }
 
+    Petr_Math::Vector clamp(Petr_Math::Vector START, Petr_Math::Vector END, Petr_Math::Vector POINT)
+    {
+        for (int i = 0; i < 3; ++i)
+        {
+            float min = fminf(START[i], END[i]);
+            float max = fmaxf(START[i], END[i]);
+            if (POINT[i] < min)
+            {
+                POINT[i] = min;
+            }
+            if (POINT[i] > max)
+            {
+                POINT[i] = max;
+            }
+        }
+        return POINT;
+    }
+
     Petr_Math::Vector closestPointOnLine(Petr_Math::Vector START, Petr_Math::Vector END, Petr_Math::Vector POINT)
     {
         auto line = END - START;
-        auto dir = START - POINT;
+        auto dir = POINT - START;
         auto dotVal = line.dot(dir);
+        float cosA = dotVal / (line.magnitude() * dir.magnitude());
+        float projLen = cosA * dir.magnitude();
+        auto closestPoint = START + (line * projLen) / line.magnitude();
+        closestPoint = clamp(START, END, closestPoint);
+        return closestPoint;
         float len = dir.magnitude();
         dir = dir.normalize();
         line = line.normalize();

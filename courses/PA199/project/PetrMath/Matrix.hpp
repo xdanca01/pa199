@@ -43,6 +43,7 @@ namespace Petr_Math {
 		float& at(int const w, int const h);
 		Matrix operator*(Matrix const& mat);
 		Matrix transpose();
+		Matrix negative();
 		Matrix operator*(Vector const& vec);
 		//[row][column]
 		__access_helper__ operator[](int row_index) const;

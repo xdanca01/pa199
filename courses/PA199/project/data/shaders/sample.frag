@@ -26,8 +26,9 @@ void main()
     //vec3 color = vec3(gl_FragDepth + 0.1);
     //Need to setup color, because of textures
     vec3 color = vec3(1.0, 1.0, 1.0);
-    /*final_color = vec4(color, 1.0);
-    return;*/
+    //vec3 color = vec3(tmp.x, tmp.y, -tmp.z);
+    //final_color = vec4(color, 1.0);
+    //return;
     if(useTexture)
     {
         color = texture(sample_texture, tex_coord).xyz;

@@ -145,6 +145,19 @@ namespace Petr_Math {
 		return result;
 	}
 
+	Matrix Matrix::negative()
+	{
+		Matrix result(width, height);
+		for (int i = 0; i < height; ++i)
+		{
+			for (int j = 0; j < width; ++j)
+			{
+				result.at(i, j) = -this->at(i, j);
+			}
+		}
+		return result;
+	}
+
 	Matrix Matrix::operator*(Vector const& vec)
 	{
 		Matrix result(height, 1);

@@ -36,7 +36,7 @@ void main()
     lightPos = lightPosition;
     FragPos = vec3(model * vec4(position, 1.0));
     viewPos = cameraPosition;
-    tmp = vec3(model[0][3], model[1][3], model[2][3]);
+    tmp = (view * vec4(position, 1.0)).xyz;
     ambientMat = ambiMat;
     diffuseMat = diffMat;
     specularMat = specMat;

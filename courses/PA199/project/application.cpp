@@ -12,21 +12,22 @@
 #include <iostream>
 
 #define DEBUG false
-#define ballRADIUS 0.005f
-#define ballX 0.05f
+#define ballRADIUS 0.01f
+#define ballX 0.2f
 #define ballZ 0.0005f
-#define radiusPaddle 0.095f
-#define widthPaddle 0.003f
+#define radiusPaddle 0.295f
+#define widthPaddle 0.01f
 #define anglePaddle 30.0f
-#define brickWidth 0.005f
+#define brickWidth 0.01f
 #define numOfBricks 6
-#define radiusBrick 0.02f
-#define radiusGround 0.1f
-#define ballSpeed 0.08f
+#define radiusBrick 0.04f
+#define radiusGround 0.3f
+#define ballSpeed 0.25f
 #define paddlesSpeed 75.0f
-#define FOV 174.0f
-#define brickHeight 0.01f
-#define gravitySpeed 0.009f
+#define FOV 25.0f
+#define brickHeight 0.03f
+#define gravitySpeed 0.06f
+#define maxTimeDelta 0.05f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
 {
@@ -185,7 +186,7 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
                 return vertex_buffer;
             }()),
             lightColor(1.0f, 1.0f, 1.0f),
-            lightPosition(0.0, 0.1f, 0.0f)
+            lightPosition(0.0, 1.0f, 0.0f)
 {
     lastTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     deltaTime = 0.0f;
@@ -196,8 +197,8 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    /*glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);*/
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     /*glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);*/
 }
@@ -228,21 +229,27 @@ Application::~Application()
 Petr_Math::Matrix Application::perspective(double fov, double aspect, double near, double far)
 {
     fov = D2R * fov;
-    float scale = 1.0f / tan(fov * 0.5);
+    /*float scale = 1.0f / tan(fov * 0.5);
     float r = aspect * scale;
     float l = -r;
     float t = scale;
     float b = -t;
     float dataForMat[16] =
     {
+        scale, 0.0f, 0.0f, 0.0f,
+        0.0f, scale, 0.0f, 0.0f,
+        0.0f, 0.0f, -(far * near) / (far - near), -1.0f,
+        0.0f, 0.0f, 0.0f, 0.0f
+    };
+    {
         2.0f * near / (r - l), 0.0f, 0.0f, 0.0f,
         0.0f, 2.0f * near / (t - b), 0.0f, 0.0f,
         (r + l) / (r - l), (t + b) / (t - b), -(far + near) / (far - near), -1.0f,
         0.0f, 0.0f, -2.0f * far * near / (far - near), 0.0f
-    };
-    /*
-    float yScale = 1.0f / tan(fov / 2.0f);
-    float xScale = yScale * aspect;
+    };*/
+    float tanHalfFovy = tan(fov / 2.0f);
+    float yScale = 1.0f / tanHalfFovy;
+    float xScale = 1.0f / (aspect * tanHalfFovy);
     float dist = far - near;
     float dataForMat[16] =
     {
@@ -250,7 +257,7 @@ Petr_Math::Matrix Application::perspective(double fov, double aspect, double nea
         0.0f, yScale, 0.0f, 0.0f,
         0.0f, 0.0f, -far/dist, -1.0f,
         0.0f, 0.0f, -(far * near) / dist, 0.0f
-    };*/
+    };
     return Petr_Math::Matrix(4, 4, dataForMat);
 }
 
@@ -284,21 +291,20 @@ void Application::SetViewTop()
 {
     camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 0.0f);
     camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 0.0f, -1.0f));
-    camera.projection_matrix = orthographic(0.1f, 100.0f, 160.0f);
+    camera.projection_matrix = orthographic(-1.0f * (float)width/height, 1.0f * (float)width / height, -1.0f, 1.0f, 0.1f, 100.0f, 2.0f);
 }
 
 void Application::SetViewSide()
 {
     camera.eye_position = Petr_Math::Vector(0.0f, 1.0f, 1.0f);
     camera.set_view_matrix(camera.eye_position, Petr_Math::Vector(3, 0.0f), Petr_Math::Vector(0.0f, 1.0f, -1.0f));
-    camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 10.0f).transpose();
+    camera.projection_matrix = perspective(FOV, (float)width/height, 0.1f, 100.0f);
 }
 
 void Application::prepare_camera()
 {
     SetViewSide();
     top = false;
-    camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 10.0f).transpose();
 }
 
 void Application::update(float delta) {}
@@ -306,6 +312,7 @@ void Application::update(float delta) {}
 void Application::render() {
     auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
     deltaTime = (float)(now - lastTime).count()/1000.0f;
+    deltaTime = fminf(deltaTime, maxTimeDelta);
     lastTime = now;
     // Sets the clear color.
     glClearColor(red, green, blue, 1.0f);
@@ -347,18 +354,6 @@ void Application::render() {
     assert(glGetError() == 0U);
 
     */
-    drawObjects();
-    Petr_Math::Vector start2(0.0f, 0.0f, 5.0f, 1.0f);
-    Petr_Math::Vector start(0.0f, 0.0f, 0.0f);
-    Petr_Math::Vector endX(1.0f, 0.0f, 0.0f);
-    Petr_Math::Vector endY(0.0f, 1.0f, 0.0f);
-    Petr_Math::Vector endZ(0.0f, 0.0f, 1.0f);
-    drawLine(start, endX, endX);
-    drawLine(start, endY, endY);
-    drawLine(start, endZ, endZ);
-
-    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-    //assert(glGetError() == 0U);
     auto Vp = Petr_Math::Vector(0.0f, 0.0f, 0.0f) * ballSpeed;
     RotatePaddles(paddlesSpeed * rotatePaddles * deltaTime);
     std::vector<Petr_Math::PolarCoordinates> bricks;
@@ -368,9 +363,8 @@ void Application::render() {
         {
             bricks.push_back(this->bricks[i].polarCoords);
         }
-
     }
-    if (bricks.size() > 0)
+    if (this->bricks.size() > 0)
     {
         bool collided = false;
         auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles, deltaTime, bricks, collided);
@@ -391,6 +385,7 @@ void Application::render() {
                     {
                         removed = true;
                         removeIndexes.push_back(i);
+                        continue;
                     }
                 }
                 //Move other bricks down
@@ -411,6 +406,19 @@ void Application::render() {
         newModel.translate(moveVector * deltaTime);
         objects[4].model = objects[4].model * newModel;
     }
+    drawObjects();
+    Petr_Math::Vector start2(0.0f, 0.0f, 5.0f, 1.0f);
+    Petr_Math::Vector start(0.0f, 0.0f, 0.0f);
+    Petr_Math::Vector endX(1.0f, 0.0f, 0.0f);
+    Petr_Math::Vector endY(0.0f, 1.0f, 0.0f);
+    Petr_Math::Vector endZ(0.0f, 0.0f, 1.0f);
+    drawLine(start, endX, endX);
+    drawLine(start, endY, endY);
+    drawLine(start, endZ, endZ);
+
+    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    //assert(glGetError() == 0U);
+    
 }
 
 void Application::render_ui() {}
@@ -440,16 +448,14 @@ void Application::on_resize(int width, int height) {
     }
     else
     {
-        //camera.projection_matrix = perspective(FOV, (float)width / height, 0.1f, 100.0f).transpose();
         SetViewSide();
     }
 }
 
 void Application::on_mouse_move(double x, double y) {}
 
-Petr_Math::Matrix Application::orthographic(double near, double far, float scale)
+Petr_Math::Matrix Application::orthographic(double left, double right, double bottom, double top, double near, double far, float scale)
 {
-    scale = 10.0f;
     float sc = (float)width / height;
     float r = sc;
     float l = 0.0f;
@@ -460,11 +466,18 @@ Petr_Math::Matrix Application::orthographic(double near, double far, float scale
     float mid_z = (-near + -far) / 2;
     float dataForMat[16] =
     {
-        scale * 2.0f/(r-l), 0.0f, 0.0f, -(r + l)/(r-l),
+        scale * 2.0f / (right - left), 0.0f, 0.0f, 0.0f,
+        0.0f, scale * 2.0f / (top - bottom), 0.0f, 0.0f,
+        0.0f, 0.0f, -2.0f / (far - near), 0.0f,
+        -(right + left) / (right - left), -(top + bottom) / (top - bottom), -(far + near) / (far - near), 1.0f
+    };
+    /*float dataForMat[16] =
+    {
+        2.0f / (r - l), 0.0f, 0.0f, -(r + l) / (r - l),
         0.0f, scale * 2.0f / (t - b), 0.0f, -(t + b) / (t - b),
         0.0f, 0.0f,  scale * 2.0f / (far - near), -(far + near) / (far - near),
         0.0f, 0.0f, 0.0f, 1.0f
-    };
+    };*/
     return Petr_Math::Matrix(4, 4, dataForMat);
 }
 
@@ -566,11 +579,7 @@ void Application::drawLine(Petr_Math::Vector start, Petr_Math::Vector end, Petr_
 void Application::drawObjects()
 {
     glUseProgram(shader_program);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     assert(glGetError() == 0U);
-    /*int modelLoc = glGetUniformLocation(shader_program, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());
-    assert(glGetError() == 0U);*/
     int viewLoc = glGetUniformLocation(shader_program, "view");
     auto viewMatrix = camera.get_view_matrix().transpose();
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, viewMatrix.getData());
@@ -598,6 +607,7 @@ void Application::drawObjects()
             obj.render.Render(shader_program, lightColor, lightPosition, camera.eye_position);
         }
     }
+    
     //objects[1].Render();
 }
 
@@ -635,7 +645,7 @@ void Application::createObjects()
     int numOfRows = 3;
     for (int row = 0; row < numOfRows; ++row)
     {
-        for (int i = 0; i < numOfBricks / 2; ++i)
+        for (int i = 0; i < numOfBricks; ++i)
         {
             Petr_Math::PolarCoordinates PC(radiusBrick, i * step + 240.0f + step / 2.0f);
             auto color = (i + row) % 2 == 0 ? pink : yellow;
@@ -643,21 +653,7 @@ void Application::createObjects()
             RenderObject brick(vertices, INDICES, color * 0.8f, color, color * 0.4f);
             bricks.push_back(Brick(brick, PC, row * brickHeight));
         }
-        Petr_Math::PolarCoordinates PC(radiusBrick, step + 120.0f + step / 2.0f);
-        auto color = row % 2 == 0 ? yellow : pink;
-        vertices = VerticesBrick(15, 0.02, 0.0f + brickHeight * row, brickHeight, brickWidth, step, step + 120.0f);
-        RenderObject brick(vertices, INDICES, color * 0.8f, color, color * 0.4f);
-        bricks.push_back(Brick(brick, PC, row * brickHeight));
-        PC = Petr_Math::PolarCoordinates(radiusBrick, step + 60.0f + step / 2.0f);
-        color = row % 2 == 0 ? pink : yellow;
-        vertices = VerticesBrick(15, 0.02, 0.0f + brickHeight * row, brickHeight, brickWidth, step, step + 60.0f);
-        brick = RenderObject(vertices, INDICES, color * 0.8f, color, color * 0.4f);
-        bricks.push_back(Brick(brick, PC, row * brickHeight));
-        color = row % 2 == 0 ? yellow : pink;
-        PC= Petr_Math::PolarCoordinates(radiusBrick, step + step / 2.0f);
-        vertices = VerticesBrick(15, 0.02, 0.0f + brickHeight * row, brickHeight, brickWidth, step, step + 0.0f);
-        brick = RenderObject(vertices, INDICES, color * 0.8f, color, color * 0.4f);
-        bricks.push_back(Brick(brick, PC, row * brickHeight));
+        
     }
 ;}
 
