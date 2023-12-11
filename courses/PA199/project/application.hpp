@@ -41,9 +41,15 @@ class Application : public IApplication {
     GLuint index_buffer;
     GLuint texture;
     GLuint Groundtexture;
+    GLuint YouLoseTexture;
+    GLuint YouWinTexture;
+    GLuint PauseTexture;
     GLuint Camerabuffer;
     GLuint VBO;
     GLuint VAO;
+    bool pause;
+    bool lost;
+    bool started;
     int rotatePaddles;
     float deltaTime;
     std::chrono::milliseconds lastTime;
@@ -122,4 +128,6 @@ class Application : public IApplication {
     void VerticesToTriangles(std::vector<Vertex2>& v1, std::vector<Vertex2>& v2, std::vector<Vertex2>& output, bool clockwise);
     void VerticesToTriangles(std::vector<Vertex2>& v1, Vertex2& v2, std::vector<Vertex2>& output, bool clockwise);
     void RotatePaddles(float angle);
+    void ComputePhysics();
+    void DrawUI();
 };

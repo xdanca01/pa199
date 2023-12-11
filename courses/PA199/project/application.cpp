@@ -13,8 +13,8 @@
 
 #define DEBUG false
 #define ballRADIUS 0.01f
-#define ballX 0.2f
-#define ballZ 0.0005f
+#define ballX 0.28f
+#define ballZ 0.0f
 #define radiusPaddle 0.295f
 #define widthPaddle 0.01f
 #define anglePaddle 30.0f
@@ -79,6 +79,9 @@ static GLuint load_texture(std::filesystem::path const& path)
 Application::Application(int initial_width, int initial_height, std::vector<std::string> arguments)
     : IApplication(initial_width, initial_height, arguments)
     ,rotatePaddles(0)
+    , lost(false)
+    , pause(false)
+    , started(false)
     , model(4, 1.0f, true)
     , vertex_shader(load_shader(lecture_folder_path / "data" / "shaders" / "sample.vert", GL_VERTEX_SHADER))
     , fragment_shader(load_shader(lecture_folder_path / "data" / "shaders" / "sample.frag", GL_FRAGMENT_SHADER))
@@ -144,6 +147,9 @@ Application::Application(int initial_width, int initial_height, std::vector<std:
             }())
     , texture(load_texture(lecture_folder_path / "data" / "textures" / "you_win.png")),
       Groundtexture(load_texture(lecture_folder_path / "data" / "textures" / "ground.png")),
+      YouLoseTexture(load_texture(lecture_folder_path / "data" / "textures" / "game_over.png")),
+      YouWinTexture(load_texture(lecture_folder_path / "data" / "textures" / "you_win.png")),
+      PauseTexture(load_texture(lecture_folder_path / "data" / "textures" / "pause.png")),
 
     shader_program_line([](GLuint const  vertex_shader, GLuint const  fragment_shader) -> GLuint {
                 GLuint const  shader_program = glCreateProgram();
@@ -267,7 +273,8 @@ void Application::prepare_lights()
 
 void Application::prepare_physics()
 {
-    auto positionBall = Petr_Math::Vector(ballX, ballZ, ballRADIUS);
+    auto posB = objects[4].model * Petr_Math::Vector(ballX, 0.0f, ballZ);
+    auto positionBall = Petr_Math::Vector(posB.at(0,0), posB.at(2, 0), ballRADIUS);
     Petr_Math::PolarCoordinates paddle1(radiusPaddle, 0.0f);
     Petr_Math::PolarCoordinates paddle2(radiusPaddle, 120.0f);
     Petr_Math::PolarCoordinates paddle3(radiusPaddle, 240.0f);
@@ -309,53 +316,8 @@ void Application::prepare_camera()
 
 void Application::update(float delta) {}
 
-void Application::render() {
-    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-    deltaTime = (float)(now - lastTime).count()/1000.0f;
-    deltaTime = fminf(deltaTime, maxTimeDelta);
-    lastTime = now;
-    // Sets the clear color.
-    glClearColor(red, green, blue, 1.0f);
-    
-    // Clears the window using the above color.
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    if (DEBUG)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }    
-    /*glUseProgram(shader_program);
-    assert(glGetError() == 0U);
-    glBindVertexArray(vertex_arrays);
-    assert(glGetError() == 0U);
-    glActiveTexture(GL_TEXTURE0);
-    assert(glGetError() == 0U);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    assert(glGetError() == 0U);*/
-    /*glBindVertexArray(VAO);
-    assert(glGetError() == 0U);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    assert(glGetError() == 0U);
-
-    float red[3] = { 1.0f, 0.0f, 0.0f };
-    glUniform3fv(glGetUniformLocation(shader_program_line, "color"), 1, red);
-
-
-    int modelLoc = glGetUniformLocation(shader_program_line, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());
-    assert(glGetError() == 0U);
-    int viewLoc = glGetUniformLocation(shader_program_line, "view");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, camera.get_view_matrix().getData());
-    assert(glGetError() == 0U);
-    int projectionLoc = glGetUniformLocation(shader_program_line, "projection");
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection_matrix.getData());
-    assert(glGetError() == 0U);
-
-    glDrawArrays(GL_LINES, 0, 2);
-    assert(glGetError() == 0U);
-
-    */
-    auto Vp = Petr_Math::Vector(0.0f, 0.0f, 0.0f) * ballSpeed;
-    RotatePaddles(paddlesSpeed * rotatePaddles * deltaTime);
+void Application::ComputePhysics()
+{
     std::vector<Petr_Math::PolarCoordinates> bricks;
     for (int i = 0; i < this->bricks.size(); ++i)
     {
@@ -370,7 +332,7 @@ void Application::render() {
         auto moveVector = gamePhysics.moveBall(paddlesSpeed, rotatePaddles, deltaTime, bricks, collided);
         if (collided)
         {
-            ResetBall();
+            lost = true;
         }
         bool removed = false;
         std::vector<int> removeIndexes;
@@ -404,9 +366,111 @@ void Application::render() {
         Petr_Math::Matrix newModel(4, 1.0f, true);
         //Model matrix for ball
         newModel.translate(moveVector * deltaTime);
-        objects[4].model = objects[4].model * newModel;
+        objects[4].model = newModel * objects[4].model;
+    }
+}
+
+void Application::DrawUI()
+{
+    glDisable(GL_DEPTH_TEST);
+    int type = -1;
+    //You lost
+    if (lost)
+    {
+        type = 0;
+    }
+    //You won
+    else if (bricks.size() <= 0)
+    {
+        type = 1;
+    }
+    //Pause
+    else if (pause)
+    {
+        type = 2;
+    }
+    else
+    {
+        return;
+    }
+    int viewLoc = glGetUniformLocation(shader_program, "view");
+    auto identityMat = Petr_Math::Matrix(4, 1.0f, true);
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, identityMat.getData());
+    assert(glGetError() == 0U);
+    int projectionLoc = glGetUniformLocation(shader_program, "projection");
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, identityMat.getData());
+    assert(glGetError() == 0U);
+    Petr_Math::Vector white(1.0f, 1.0f, 1.0f);
+    Petr_Math::Vector green(0.0f, 1.0f, 0.0f);
+    Petr_Math::Vector red(1.0f, 0.0f, 0.0f);
+    Petr_Math::Vector blue(0.0f, 0.0f, 1.0f);
+    auto pink = blue + red;
+    auto yellow = red + green;
+    //Lives
+    std::vector<Vertex2> vertices = { {-1.0f, 1.0f, 0.0f, 0.0f, 1.0f}, {-1.0f, 0.8f, 0.0f, 0.0f, 0.0f}, {-0.5f, 1.0f, 0.0f, 1.0f, 1.0f},
+    {-1.0f, 0.8f, 0.0f, 0.0f, 0.0f}, {-0.5f, 0.8f, 0.0f, 1.0f, 0.0f}, {-0.5f, 1.0f, 0.0f, 1.0f, 1.0f} };
+    vertices = { {-1.0f, 0.5f, 0.0f, 0.0f, 1.0f}, {-1.0f, -0.5f, 0.0f, 0.0f, 0.0f}, {1.0f, 0.5f, 0.0f, 1.0f, 1.0f },
+    { -1.0f, -0.5f, 0.0f, 0.0f, 0.0f }, { 1.0f, -0.5f, 0.0f, 1.0f, 0.0f }, { 1.0f, 0.5f, 0.0f, 1.0f, 1.0f } };
+    RenderObject center(vertices, INDICES, white, white, white);
+    center.Render(shader_program, lightColor, lightPosition, camera.eye_position, YouLoseTexture + type);
+}
+
+void Application::render() {
+    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+    deltaTime = (float)(now - lastTime).count()/1000.0f;
+    deltaTime = fminf(deltaTime, maxTimeDelta);
+    lastTime = now;
+    // Sets the clear color.
+    glClearColor(red, green, blue, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+    // Clears the window using the above color.
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (DEBUG)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    /*glUseProgram(shader_program);
+    assert(glGetError() == 0U);
+    glBindVertexArray(vertex_arrays);
+    assert(glGetError() == 0U);
+    glActiveTexture(GL_TEXTURE0);
+    assert(glGetError() == 0U);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    assert(glGetError() == 0U);*/
+    /*glBindVertexArray(VAO);
+    assert(glGetError() == 0U);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    assert(glGetError() == 0U);
+
+    float red[3] = { 1.0f, 0.0f, 0.0f };
+    glUniform3fv(glGetUniformLocation(shader_program_line, "color"), 1, red);
+
+
+    int modelLoc = glGetUniformLocation(shader_program_line, "model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());
+    assert(glGetError() == 0U);
+    int viewLoc = glGetUniformLocation(shader_program_line, "view");
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, camera.get_view_matrix().getData());
+    assert(glGetError() == 0U);
+    int projectionLoc = glGetUniformLocation(shader_program_line, "projection");
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection_matrix.getData());
+    assert(glGetError() == 0U);
+
+    glDrawArrays(GL_LINES, 0, 2);
+    assert(glGetError() == 0U);
+
+    */
+    if (!pause)
+    {
+        auto Vp = Petr_Math::Vector(0.0f, 0.0f, 0.0f) * ballSpeed;
+        RotatePaddles(paddlesSpeed * rotatePaddles * deltaTime);
+        if (started)
+        {
+            ComputePhysics();
+        }
     }
     drawObjects();
+    DrawUI();
     Petr_Math::Vector start2(0.0f, 0.0f, 5.0f, 1.0f);
     Petr_Math::Vector start(0.0f, 0.0f, 0.0f);
     Petr_Math::Vector endX(1.0f, 0.0f, 0.0f);
@@ -415,18 +479,28 @@ void Application::render() {
     drawLine(start, endX, endX);
     drawLine(start, endY, endY);
     drawLine(start, endZ, endZ);
-
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     //assert(glGetError() == 0U);
     
 }
 
-void Application::render_ui() {}
+void Application::render_ui()
+{
+
+}
 
 void Application::RotatePaddles(float angle)
 {
     Petr_Math::Matrix newModel(4, 1.0f, true);
     newModel.rotateY(angle);
+    //Rotate also a ball
+    if (!started)
+    {
+        objects[4].model = objects[4].model * newModel;
+        auto posB = objects[4].model * Petr_Math::Vector(ballX, 0.0f, ballZ);
+        auto positionBall = Petr_Math::Vector(posB.at(0, 0), posB.at(2, 0), ballRADIUS);
+        gamePhysics.updateBall(positionBall);
+    }
     //RenderObjects are at 1-3
     for (int i = 1; i <= 3; ++i)
     {
@@ -490,13 +564,26 @@ void Application::on_key_pressed(int key, int scancode, int action, int mods) {
         blue = 0;
         switch (key) {
         case GLFW_KEY_R:
-            red = 1;
+            lost = false;
+            started = false;
+            pause = false;
+            createObjects();
+            prepare_physics();
             break;
         case GLFW_KEY_G:
             green = 1;
             break;
         case GLFW_KEY_B:
             blue = 1;
+            break;
+        case GLFW_KEY_P:
+            pause = !pause;
+            break;
+        case GLFW_KEY_SPACE:
+            if (!started)
+            {
+                started = true;
+            }
             break;
         case GLFW_KEY_LEFT:
             rotatePaddles = 1;
@@ -613,6 +700,8 @@ void Application::drawObjects()
 
 void Application::createObjects()
 {
+    objects.clear();
+    bricks.clear();
     //Create ground
     auto vertices = verticesGround();
     Petr_Math::Vector white(1.0f, 1.0f, 1.0f);
@@ -653,7 +742,6 @@ void Application::createObjects()
             RenderObject brick(vertices, INDICES, color * 0.8f, color, color * 0.4f);
             bricks.push_back(Brick(brick, PC, row * brickHeight));
         }
-        
     }
 ;}
 

@@ -43,6 +43,14 @@ public:
         movement = movement.normalize() * speed;
     }
 
+    void updateBall(Petr_Math::Vector Pb)
+    {
+        positionBall = Pb;
+        movement = Pb.opposite();
+        movement = Petr_Math::Vector(movement[0], 0.0f, movement[1]);
+        movement = movement.normalize() * speed;
+    }
+
     Petr_Math::Vector CheckCollision(std::vector<Petr_Math::PolarCoordinates> positionsB, bool &collision)
     {
         float distanceFromCenter = sqrt(positionBall[0] * positionBall[0] + positionBall[1] * positionBall[1]);
@@ -51,7 +59,6 @@ public:
         if (distanceFromCenter - positionBall[2] > radiusGround)
         {
             collision = true;
-            //TODO GAME OVER
         }
         //Possible collision with paddle
         else if (distanceFromCenter + positionBall[2] >= positionsP[0].radius - widthPaddle/2 &&
