@@ -90,12 +90,12 @@ public:
         return fminf(abs(second - first), abs(360.0f - second + first));
     }
 
-    //Op on Left of O?
-    bool onLeft(float O, float Op)
+    //Ball on Left of O? Looking from center
+    bool onLeft(float O, float Ball)
     {
-        if (O > Op) return false;
-        if (O < 180.0f && Op > 180.0f) return false;
-        return true;
+        if (O > Ball && O - Ball < 180.0f) return true;
+        if (O < 180.0f && Ball > 180.0f) return true;
+        return false;
     }
 
     Petr_Math::Vector clamp(Petr_Math::Vector START, Petr_Math::Vector END, Petr_Math::Vector POINT)
@@ -142,11 +142,11 @@ public:
 
     Petr_Math::Vector paddlePhase2(float radiusBall, float angleBall, float Rp, float Op, float Wp, float angleWidthPaddle)
     {
-        int sign = onLeft(angleBall, Op) ? 1 : -1;
+        int sign = onLeft(Op, angleBall) ? 1 : -1;
         //Clockwise
-        auto A = Petr_Math::PolarCoordinates(Rp - Wp, Op - sign * angleWidthPaddle).toCartesian();
+        auto A = Petr_Math::PolarCoordinates(Rp - Wp / 2.0f, Op - sign * angleWidthPaddle).toCartesian();
         A = Petr_Math::Vector(A[0], 0.0f, A[1]);
-        auto B = Petr_Math::PolarCoordinates(Rp + Wp, Op - sign * angleWidthPaddle).toCartesian();
+        auto B = Petr_Math::PolarCoordinates(Rp + Wp / 2.0f, Op - sign * angleWidthPaddle).toCartesian();
         B = Petr_Math::Vector(B[0], 0.0f, B[1]);
         auto Pb = Petr_Math::Vector(positionBall[0], 0.0f, positionBall[1]);
         Petr_Math::Vector collisionPoint = closestPointOnLine(A, B, Pb);

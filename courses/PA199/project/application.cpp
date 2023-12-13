@@ -26,7 +26,7 @@
 #define paddlesSpeed 75.0f
 #define FOV 25.0f
 #define brickHeight 0.03f
-#define gravitySpeed 0.06f
+#define gravitySpeed 0.09f
 #define maxTimeDelta 0.05f
 
 static GLuint load_shader(std::filesystem::path const& path, GLenum const shader_type)
@@ -291,7 +291,7 @@ void Application::prepare_physics()
         
     }
     float angleWidthBrick = 360.0f / (float)numOfBricks;
-    gamePhysics = Physics(positionBall, paddles, widthPaddle / 2.0f, anglePaddle / 2.0f, brickWidth / 2.0f, angleWidthBrick / 2.0f, radiusGround, ballSpeed);
+    gamePhysics = Physics(positionBall, paddles, widthPaddle, anglePaddle / 2.0f, brickWidth, angleWidthBrick / 2.0f, radiusGround, ballSpeed);
 }
 
 void Application::SetViewTop()
@@ -429,37 +429,7 @@ void Application::render() {
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
-    /*glUseProgram(shader_program);
-    assert(glGetError() == 0U);
-    glBindVertexArray(vertex_arrays);
-    assert(glGetError() == 0U);
-    glActiveTexture(GL_TEXTURE0);
-    assert(glGetError() == 0U);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    assert(glGetError() == 0U);*/
-    /*glBindVertexArray(VAO);
-    assert(glGetError() == 0U);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    assert(glGetError() == 0U);
 
-    float red[3] = { 1.0f, 0.0f, 0.0f };
-    glUniform3fv(glGetUniformLocation(shader_program_line, "color"), 1, red);
-
-
-    int modelLoc = glGetUniformLocation(shader_program_line, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, model.getData());
-    assert(glGetError() == 0U);
-    int viewLoc = glGetUniformLocation(shader_program_line, "view");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, camera.get_view_matrix().getData());
-    assert(glGetError() == 0U);
-    int projectionLoc = glGetUniformLocation(shader_program_line, "projection");
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, camera.projection_matrix.getData());
-    assert(glGetError() == 0U);
-
-    glDrawArrays(GL_LINES, 0, 2);
-    assert(glGetError() == 0U);
-
-    */
     if (!pause)
     {
         auto Vp = Petr_Math::Vector(0.0f, 0.0f, 0.0f) * ballSpeed;
@@ -545,13 +515,6 @@ Petr_Math::Matrix Application::orthographic(double left, double right, double bo
         0.0f, 0.0f, -2.0f / (far - near), 0.0f,
         -(right + left) / (right - left), -(top + bottom) / (top - bottom), -(far + near) / (far - near), 1.0f
     };
-    /*float dataForMat[16] =
-    {
-        2.0f / (r - l), 0.0f, 0.0f, -(r + l) / (r - l),
-        0.0f, scale * 2.0f / (t - b), 0.0f, -(t + b) / (t - b),
-        0.0f, 0.0f,  scale * 2.0f / (far - near), -(far + near) / (far - near),
-        0.0f, 0.0f, 0.0f, 1.0f
-    };*/
     return Petr_Math::Matrix(4, 4, dataForMat);
 }
 
@@ -694,8 +657,6 @@ void Application::drawObjects()
             obj.render.Render(shader_program, lightColor, lightPosition, camera.eye_position);
         }
     }
-    
-    //objects[1].Render();
 }
 
 void Application::createObjects()
@@ -736,9 +697,9 @@ void Application::createObjects()
     {
         for (int i = 0; i < numOfBricks; ++i)
         {
-            Petr_Math::PolarCoordinates PC(radiusBrick, i * step + 240.0f + step / 2.0f);
+            Petr_Math::PolarCoordinates PC(radiusBrick, i * step + step / 2.0f);
             auto color = (i + row) % 2 == 0 ? pink : yellow;
-            vertices = VerticesBrick(15, radiusBrick, 0.0f + brickHeight * row, brickHeight, brickWidth, step, i * step + 240.0f);
+            vertices = VerticesBrick(15, radiusBrick, 0.0f + brickHeight * row, brickHeight, brickWidth, step, i * step);
             RenderObject brick(vertices, INDICES, color * 0.8f, color, color * 0.4f);
             bricks.push_back(Brick(brick, PC, row * brickHeight));
         }
@@ -811,10 +772,10 @@ std::vector<Vertex2> Application::VerticesBrick(int points, float R, float yBott
     std::vector<Vertex2> vertices;
     std::vector<Vertex2> verticesTop;
     std::vector<Vertex2> verticesBottom;
-    auto verticesTop1 = verticesCircle(R - width/2, points, angle, yBottom + height, offset);
-    auto verticesTop2 = verticesCircle(R + width / 2, points, angle, yBottom + height, offset);
-    auto verticesBottom1 = verticesCircle(R - width / 2, points, angle, yBottom, offset);
-    auto verticesBottom2 = verticesCircle(R + width / 2, points, angle, yBottom, offset);
+    auto verticesTop1 = verticesCircle(R - width/2.0f, points, angle, yBottom + height, offset);
+    auto verticesTop2 = verticesCircle(R + width / 2.0f, points, angle, yBottom + height, offset);
+    auto verticesBottom1 = verticesCircle(R - width / 2.0f, points, angle, yBottom, offset);
+    auto verticesBottom2 = verticesCircle(R + width / 2.0f, points, angle, yBottom, offset);
 
     Petr_Math::Vector normalUp(0.0f, 1.0f, 0.0f);
     Petr_Math::Vector normalDown(0.0f, -1.0f, 0.0f);
@@ -886,10 +847,10 @@ std::vector<Vertex2> Application::VerticesPaddle(int points, float R, float yBot
     std::vector<Vertex2> vertices;
     std::vector<Vertex2> verticesTop;
     std::vector<Vertex2> verticesBottom;
-    auto verticesTop1 = verticesCircle(R - width / 2, points, angle, yBottom + height, angleOffset - angle/2);
-    auto verticesTop2 = verticesCircle(R + width / 2, points, angle, yBottom + height, angleOffset - angle / 2);
-    auto verticesBottom1 = verticesCircle(R - width / 2, points, angle, yBottom, angleOffset - angle / 2);
-    auto verticesBottom2 = verticesCircle(R + width / 2, points, angle, yBottom, angleOffset - angle / 2);
+    auto verticesTop1 = verticesCircle(R - width / 2.0f, points, angle, yBottom + height, angleOffset - angle/ 2.0f);
+    auto verticesTop2 = verticesCircle(R + width / 2.0f, points, angle, yBottom + height, angleOffset - angle / 2.0f);
+    auto verticesBottom1 = verticesCircle(R - width / 2.0f, points, angle, yBottom, angleOffset - angle / 2.0f);
+    auto verticesBottom2 = verticesCircle(R + width / 2.0f, points, angle, yBottom, angleOffset - angle / 2.0f);
 
     //NORMAL is anticlockwise up!!!!
     //Counterclockwise is frontface
