@@ -446,9 +446,9 @@ void Application::render() {
     Petr_Math::Vector endX(1.0f, 0.0f, 0.0f);
     Petr_Math::Vector endY(0.0f, 1.0f, 0.0f);
     Petr_Math::Vector endZ(0.0f, 0.0f, 1.0f);
-    drawLine(start, endX, endX);
+    /*drawLine(start, endX, endX);
     drawLine(start, endY, endY);
-    drawLine(start, endZ, endZ);
+    drawLine(start, endZ, endZ);*/
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     //assert(glGetError() == 0U);
     
